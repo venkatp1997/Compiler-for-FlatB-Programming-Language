@@ -1,12 +1,12 @@
-bcc:	parser.tab.c lex.yy.c
-	gcc parser.tab.c lex.yy.c -lfl -o bcc
-parser.tab.c: parser.y 
-	bison -d parser.y 
-parser.tab.h: parser.y
-	bison -d parser.y 
-lex.yy.c: scanner.l parser.tab.h
-	flex scanner.l
+bcc:	y.tab.c lex.yy.c
+	g++ y.tab.c lex.yy.c -lfl -o bcc
+y.tab.c: parser.y 
+	yacc -d --debug --verbose parser.y 
+y.tab.h: parser.y
+	yacc -d  --debug --verbose parser.y
+lex.yy.c: scanner.l y.tab.h
+	lex scanner.l
 
 .PHONY: clean 
 clean:
-	-@rm -rf parser.tab.c parser.tab.h lex.yy.c bcc 2>/dev/null || true
+	-@rm -rf y.tab.c y.tab.h lex.yy.c y.output bcc 2>/dev/null || true
