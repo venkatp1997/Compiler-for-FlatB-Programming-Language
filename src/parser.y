@@ -36,42 +36,39 @@
 %left '*' '/'
 %%
 
-program :	declaration_list decl_block statement_list code_block
+program :	declaration_list '{' decl_statements '}' statement_list '{' code_statements '}'
 
-decl_block :	'{' decl_statements '}'
-						|	'{' '}'
 
-decl_statements	:	decl_statement
-								| decl_statements decl_statement
-
-decl_statement	: INT DIDS ';'
-								| ';'
 
 DIDS	:	IDENTIFIER '[' NUMBER ']'
 			| IDENTIFIER
 			| DIDS ',' IDENTIFIER
 			| DIDS ',' IDENTIFIER '[' NUMBER ']'
 
-code_block :	'{' code_statements '}'
-					 |	'{' '}'
+decl_statements	:	decl_statement
+								| decl_statements decl_statement
 
+decl_statement	: INT DIDS ';'
+								| ';'
 code_statements	:	code_statement
 								|	code_statements code_statement
 
-code_statement	: forloop
-								| whileloop
+code_statement	: loops
 								| ifc
-								|	out ';'
+								|	io ';'
 								|	equals ';'
-								|	scan ';'
-								| gotoc ';'
 								| IDENTIFIER ':'
 								|	';'
-forloop : FOR IDS '=' NUMBER ',' NUMBER code_block
-				| FOR IDS '=' NUMBER ',' NUMBER ',' NUMBER code_block
-whileloop : WHILE boolexpr code_block
-ifc : IF boolexpr code_block ELSE code_block
-		| IF boolexpr code_block
+loops	:	forloop
+			|	whileloop
+			| gotoc ';'
+io		:	out
+			| scan
+forloop : FOR IDS '=' NUMBER ',' NUMBER '{' code_statements '}'
+				| FOR IDS '=' NUMBER ',' NUMBER ',' NUMBER '{' code_statements '}'
+whileloop : WHILE boolexpr '{' code_statements '}'
+ifc : IF boolexpr '{'	code_statements '}' ELSE '{' code_statements '}'
+		| IF boolexpr '{' code_statements '}'
 gotoc	:	GOTO IDENTIFIER IF boolexpr
 			| GOTO IDENTIFIER
 equals : IDS '=' expr
@@ -104,7 +101,7 @@ IDS	:	IDENTIFIER
 void yyerror (char const *s)
 {
        fprintf (stderr, "%s\n", s);
-       printf("THE ERROR IS AT: %d\n", x);
+       printf("THE ERROR IS AT: %d\n", x + 1);
 }
 
 int main(int argc, char *argv[])

@@ -42,7 +42,6 @@ int return INT;
 ":"		return ':';
 ";"		return ';';
 ","		return ',';
-
 [\n]	{x++;}
 
 [ \t]		{ /* Do nothing */ }
