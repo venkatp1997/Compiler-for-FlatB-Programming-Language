@@ -107,7 +107,7 @@ io		:	out {$$ = $1;}
 			| scan {$$ = $1;}
 forloop : FOR IDS '=' NUMBER ',' NUMBER ',' NUMBER '{' code_statements '}' {$$ = new Forloop($2, $4, $6, $10, $8);}
 		| FOR IDS '=' NUMBER ',' NUMBER '{' code_statements '}' {$$ = new Forloop($2, $4, $6, $8);}
-whileloop : WHILE boolexpr '{' code_statements '}' ';' {$$ = new Whileloop($2, $4);}
+whileloop : WHILE boolexpr '{' code_statements '}' {$$ = new Whileloop($2, $4);}
 ifc : IF boolexpr '{'	code_statements '}' ELSE '{' code_statements '}' {$$ = new IfElse($2, $4, $8);}
 		| IF boolexpr '{' code_statements '}' {$$ = new IfElse($2, $4);}
 equals : IDS '=' expr {$$ = new Assignment($1, $3);}
