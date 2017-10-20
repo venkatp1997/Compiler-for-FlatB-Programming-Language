@@ -1,5 +1,10 @@
 %{
-#include "y.tab.h"
+#include"ast.h"
+
+#include "parser.tab.h"
+#include <bits/stdc++.h>
+#define YY_DECL extern "C" int yylex()
+using namespace std;
 int x = 0;
 %}
 
@@ -15,15 +20,22 @@ read	return READ;
 print return PRINT;
 println return PRINTLN;
 int return INT;
-\".*\" return STRING;
-[0-9][0-9]*	{  
-			printf("Token type: Number, Lexeme/Token Value: %s\n", yytext);  
-			return NUMBER;
-                }
-[a-zA-Z][a-zA-Z0-9]* {  
-			printf("Token type: Identifier, Lexeme/Token Value: %s\n", yytext);  
-			return IDENTIFIER;
-} 
+
+
+\".*\"	{ 
+    		yytext[yyleng-1] = '\0';
+			yylval.str = strdup(yytext+1);
+			return STRING; 
+		}
+
+[0-9][0-9]* {
+ 				yylval.num = atoi(yytext);
+				return NUMBER; 
+			} 
+[_a-zA-Z][_a-zA-Z0-9]*  {
+							yylval.str = strdup(yytext);
+							return IDENTIFIER; 
+						}
 "+"		return '+';
 "-"		return '-';
 "*"		return '*';

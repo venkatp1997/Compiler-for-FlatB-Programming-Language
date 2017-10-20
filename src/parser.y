@@ -1,13 +1,58 @@
 %{
   #include <stdio.h>
   #include <stdlib.h>
-  int yylex(void);
-  int yyparse(void);
-  extern FILE* yyin;
+  #include "ast.h"
+  extern "C" int yylex();
+  extern "C" int yyparse();
+  extern "C" FILE *yyin;
   extern int x;
   void yyerror(const char *s);
+  #include "lex.yy.c"
 
 %}
+%union
+{
+	char* str;
+	int num;
+	Program *p;
+	Decl_Statement *ds;
+	Code_Statement *cs;
+	Code_Statement_Block *csb;
+	vector<Code_Statement*> *css;
+	Id *id;
+	vector<Id*> *ids;
+	Print *pr;
+	vector<Print*> *ps;
+	Expr* e;
+	BoolExpr* be;
+	Term* t;
+}
+
+%type <p> program;
+%type <ids> DIDS;
+%type <ids> MIDS;
+%type <ids> decl_statement;
+%type <ds> decl_statements;
+%type <csb> code_statements;
+%type <cs> code_statement;
+%type <cs> loops;
+%type <cs> io;
+%type <cs> forloop;
+%type <cs> whileloop;
+%type <cs> ifc;
+%type <cs> equals;
+%type <cs> scan;
+%type <cs> out;
+%type <ps> statement;
+%type <pr> prints;
+%type <e> expr;
+%type <be> boolexpr;
+%type <t> term;
+%type <id> IDS;
+%type <str> STRING;
+%type <str> IDENTIFIER;
+%type <num> NUMBER;
+
 %start program
 %token declaration_list
 %token statement_list
@@ -36,65 +81,61 @@
 %left '*' '/'
 %%
 
-program :	declaration_list '{' decl_statements '}' statement_list '{' code_statements '}'
+program :	declaration_list '{' decl_statements '}' statement_list '{' code_statements '}' {$$ = new Program($3, $7);root = $$;}
 
 
 
-DIDS	:	IDENTIFIER '[' NUMBER ']'
-			| IDENTIFIER
-			| DIDS ',' IDENTIFIER
-			| DIDS ',' IDENTIFIER '[' NUMBER ']'
+DIDS	:	IDS {$$ = new vector<Id*>; $$->push_back($1);}
+			| DIDS ',' IDS {$1->push_back($3);$$ = $1;}
 
-decl_statements	:	decl_statement
-								| decl_statements decl_statement
+decl_statements	:	decl_statement {$$ = new Decl_Statement($1);}
+								| decl_statements decl_statement {$1->ids->insert($1->ids->end(), $2->begin(), $2->end());$$ = $1;}
 
-decl_statement	: INT DIDS ';'
-								| ';'
-code_statements	:	code_statement
-								|	code_statements code_statement
+decl_statement	: INT DIDS ';' {$$ = $2;}
+								| ';' {$$ = new vector<Id*>;}
+code_statements	:	code_statement {$$ = new Code_Statement_Block();$$->add($1);}
+								|	code_statements code_statement {$1->statements->push_back($2);$$ = $1;}
 
-code_statement	: loops
-								| ifc
-								|	io ';'
-								|	equals ';'
-								| IDENTIFIER ':'
-								|	';'
-loops	:	forloop
-			|	whileloop
-			| gotoc ';'
-io		:	out
-			| scan
-forloop : FOR IDS '=' NUMBER ',' NUMBER '{' code_statements '}'
-				| FOR IDS '=' NUMBER ',' NUMBER ',' NUMBER '{' code_statements '}'
-whileloop : WHILE boolexpr '{' code_statements '}'
-ifc : IF boolexpr '{'	code_statements '}' ELSE '{' code_statements '}'
-		| IF boolexpr '{' code_statements '}'
-gotoc	:	GOTO IDENTIFIER IF boolexpr
-			| GOTO IDENTIFIER
-equals : IDS '=' expr
-scan : READ IDS
-out	:	PRINT statement
-			| PRINTLN statement
-statement	: prints
-					| statement ',' prints
-prints	:	STRING
-				| expr
-expr	: term
-			| expr '+' expr 
-			|	expr '*' expr 
-			|	expr '-' expr 
-			|	expr '/' expr 
+code_statement	: loops {$$ = $1;}
+								| ifc {$$ = $1;}
+								|	io ';' {$$ = $1;}
+								|	equals ';' {$$ = $1;}
+								|	';' {$$ = new Code_Statement();}
+loops	:	forloop {$$ = $1;}
+			|	whileloop {$$ = $1;}
+io		:	out {$$ = $1;}
+			| scan {$$ = $1;}
+forloop : FOR IDS '=' NUMBER ',' NUMBER ',' NUMBER '{' code_statements '}' {$$ = new Forloop($2, $4, $6, $10, $8);}
+		| FOR IDS '=' NUMBER ',' NUMBER '{' code_statements '}' {$$ = new Forloop($2, $4, $6, $8);}
+whileloop : WHILE boolexpr '{' code_statements '}' ';' {$$ = new Whileloop($2, $4);}
+ifc : IF boolexpr '{'	code_statements '}' ELSE '{' code_statements '}' {$$ = new IfElse($2, $4, $8);}
+		| IF boolexpr '{' code_statements '}' {$$ = new IfElse($2, $4);}
+equals : IDS '=' expr {$$ = new Assignment($1, $3);}
+scan : READ MIDS {$$ = new Read($2);}
+out	:	PRINT statement {$$ = new Prints($2);}
+			| PRINTLN statement {$$ = new Prints($2, '\n');}
+statement	: prints {$$ = new vector<Print*>;$$->push_back($1);}
+					| statement ',' prints {$1->push_back($3);$$ = $1;}
+prints	:	STRING {$$ = new Print($1);}
+				| expr {$$ = new Print($1);}
+expr	: term {$$ = $1;}
+			| expr '+' expr {$$ = new BinExpr($1, $3, '+');}
+			|	expr '*' expr {$$ = new BinExpr($1, $3, '*');}
+			|	expr '-' expr {$$ = new BinExpr($1, $3, '-');}
+			|	expr '/' expr {$$ = new BinExpr($1, $3, '/');}
 
-boolexpr	: expr GT expr
-					|	expr GTE expr
-					|	expr LT expr
-					|	expr LTE expr
-					|	expr DE expr
-					|	expr NE expr
-term	:	IDS
-			| NUMBER
-IDS	:	IDENTIFIER 
-		| IDENTIFIER '[' expr ']'
+boolexpr	: expr GT expr {$$ = new BoolExpr($1, $3, ">");}
+					|	expr GTE expr {$$ = new BoolExpr($1, $3, ">=");}
+					|	expr LT expr {$$ = new BoolExpr($1, $3, "<");}
+					|	expr LTE expr {$$ = new BoolExpr($1, $3, "<=");}
+					|	expr DE expr {$$ = new BoolExpr($1, $3, "==");}
+					|	expr NE expr {$$ = new BoolExpr($1, $3, "!=");}
+term	:	IDS {$$ = new Term($1);}
+			| NUMBER {$$ = new Term($1);}
+IDS	:	IDENTIFIER {$$ = new Id($1);}
+		| IDENTIFIER '[' expr ']' {$$ = new Id($1, $3);}
+MIDS : IDS {$$ = new vector<Id*>;$$->push_back($1);}
+		| MIDS ',' IDS {$1->push_back($3);$$ = $1;}
 
 %%
 
@@ -103,20 +144,13 @@ void yyerror (char const *s)
        fprintf (stderr, "%s\n", s);
        printf("THE ERROR IS AT: %d\n", x + 1);
 }
-
-int main(int argc, char *argv[])
-{
-	if (argc == 1 ) {
-		fprintf(stderr, "Correct usage: bcc filename\n");
-		exit(1);
-	}
-
-	if (argc > 2) {
-		fprintf(stderr, "Passing more arguments than necessary.\n");
-		fprintf(stderr, "Correct usage: bcc filename\n");
-	}
-
- yyin = fopen(argv[1], "r");
-
-	yyparse();
+int main(int argc, char** argv) {
+	FILE *myfile = fopen(argv[1], "r");
+	yyin = myfile;
+	do {
+		yyparse();
+	} while (!feof(yyin));
+	interpreter *visitor = new interpreter();
+	root->accept(visitor);
+	return 0;
 }

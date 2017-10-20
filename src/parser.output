@@ -1,0 +1,1882 @@
+Terminals unused in grammar
+
+   ETOK
+   GOTO
+
+
+Grammar
+
+    0 $accept: program $end
+
+    1 program: declaration_list '{' decl_statements '}' statement_list '{' code_statements '}'
+
+    2 DIDS: IDS
+    3     | DIDS ',' IDS
+
+    4 decl_statements: decl_statement
+    5                | decl_statements decl_statement
+
+    6 decl_statement: INT DIDS ';'
+    7               | ';'
+
+    8 code_statements: code_statement
+    9                | code_statements code_statement
+
+   10 code_statement: loops
+   11               | ifc
+   12               | io ';'
+   13               | equals ';'
+   14               | ';'
+
+   15 loops: forloop
+   16      | whileloop
+
+   17 io: out
+   18   | scan
+
+   19 forloop: FOR IDS '=' NUMBER ',' NUMBER ',' NUMBER '{' code_statements '}'
+   20        | FOR IDS '=' NUMBER ',' NUMBER '{' code_statements '}'
+
+   21 whileloop: WHILE boolexpr '{' code_statements '}' ';'
+
+   22 ifc: IF boolexpr '{' code_statements '}' ELSE '{' code_statements '}'
+   23    | IF boolexpr '{' code_statements '}'
+
+   24 equals: IDS '=' expr
+
+   25 scan: READ MIDS
+
+   26 out: PRINT statement
+   27    | PRINTLN statement
+
+   28 statement: prints
+   29          | statement ',' prints
+
+   30 prints: STRING
+   31       | expr
+
+   32 expr: term
+   33     | expr '+' expr
+   34     | expr '*' expr
+   35     | expr '-' expr
+   36     | expr '/' expr
+
+   37 boolexpr: expr GT expr
+   38         | expr GTE expr
+   39         | expr LT expr
+   40         | expr LTE expr
+   41         | expr DE expr
+   42         | expr NE expr
+
+   43 term: IDS
+   44     | NUMBER
+
+   45 IDS: IDENTIFIER
+   46    | IDENTIFIER '[' expr ']'
+
+   47 MIDS: IDS
+   48     | MIDS ',' IDS
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+'*' (42) 34
+'+' (43) 33
+',' (44) 3 19 20 29 48
+'-' (45) 35
+'/' (47) 36
+';' (59) 6 7 12 13 14 21
+'=' (61) 19 20 24
+'[' (91) 46
+']' (93) 46
+'{' (123) 1 19 20 21 22 23
+'}' (125) 1 19 20 21 22 23
+error (256)
+declaration_list (258) 1
+statement_list (259) 1
+NUMBER (260) 19 20 44
+IDENTIFIER (261) 45 46
+ETOK (262)
+INT (263) 6
+FOR (264) 19 20
+IF (265) 22 23
+ELSE (266) 22
+GOTO (267)
+WHILE (268) 21
+GT (269) 37
+GTE (270) 38
+LT (271) 39
+LTE (272) 40
+DE (273) 41
+NE (274) 42
+STRING (275) 30
+PRINT (276) 26
+PRINTLN (277) 27
+READ (278) 25
+
+
+Nonterminals, with rules where they appear
+
+$accept (35)
+    on left: 0
+program (36)
+    on left: 1, on right: 0
+DIDS (37)
+    on left: 2 3, on right: 3 6
+decl_statements (38)
+    on left: 4 5, on right: 1 5
+decl_statement (39)
+    on left: 6 7, on right: 4 5
+code_statements (40)
+    on left: 8 9, on right: 1 9 19 20 21 22 23
+code_statement (41)
+    on left: 10 11 12 13 14, on right: 8 9
+loops (42)
+    on left: 15 16, on right: 10
+io (43)
+    on left: 17 18, on right: 12
+forloop (44)
+    on left: 19 20, on right: 15
+whileloop (45)
+    on left: 21, on right: 16
+ifc (46)
+    on left: 22 23, on right: 11
+equals (47)
+    on left: 24, on right: 13
+scan (48)
+    on left: 25, on right: 18
+out (49)
+    on left: 26 27, on right: 17
+statement (50)
+    on left: 28 29, on right: 26 27 29
+prints (51)
+    on left: 30 31, on right: 28 29
+expr (52)
+    on left: 32 33 34 35 36, on right: 24 31 33 34 35 36 37 38 39 40
+    41 42 46
+boolexpr (53)
+    on left: 37 38 39 40 41 42, on right: 21 22 23
+term (54)
+    on left: 43 44, on right: 32
+IDS (55)
+    on left: 45 46, on right: 2 3 19 20 24 43 47 48
+MIDS (56)
+    on left: 47 48, on right: 25 48
+
+
+State 0
+
+    0 $accept: . program $end
+    1 program: . declaration_list '{' decl_statements '}' statement_list '{' code_statements '}'
+
+    declaration_list  shift, and go to state 1
+
+    program  go to state 2
+
+
+State 1
+
+    1 program: declaration_list . '{' decl_statements '}' statement_list '{' code_statements '}'
+
+    '{'  shift, and go to state 3
+
+
+State 2
+
+    0 $accept: program . $end
+
+    $end  shift, and go to state 4
+
+
+State 3
+
+    1 program: declaration_list '{' . decl_statements '}' statement_list '{' code_statements '}'
+    4 decl_statements: . decl_statement
+    5                | . decl_statements decl_statement
+    6 decl_statement: . INT DIDS ';'
+    7               | . ';'
+
+    INT  shift, and go to state 5
+    ';'  shift, and go to state 6
+
+    decl_statements  go to state 7
+    decl_statement   go to state 8
+
+
+State 4
+
+    0 $accept: program $end .
+
+    $default  accept
+
+
+State 5
+
+    2 DIDS: . IDS
+    3     | . DIDS ',' IDS
+    6 decl_statement: INT . DIDS ';'
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    IDENTIFIER  shift, and go to state 9
+
+    DIDS  go to state 10
+    IDS   go to state 11
+
+
+State 6
+
+    7 decl_statement: ';' .
+
+    $default  reduce using rule 7 (decl_statement)
+
+
+State 7
+
+    1 program: declaration_list '{' decl_statements . '}' statement_list '{' code_statements '}'
+    5 decl_statements: decl_statements . decl_statement
+    6 decl_statement: . INT DIDS ';'
+    7               | . ';'
+
+    INT  shift, and go to state 5
+    '}'  shift, and go to state 12
+    ';'  shift, and go to state 6
+
+    decl_statement  go to state 13
+
+
+State 8
+
+    4 decl_statements: decl_statement .
+
+    $default  reduce using rule 4 (decl_statements)
+
+
+State 9
+
+   45 IDS: IDENTIFIER .  [GT, GTE, LT, LTE, DE, NE, '+', '-', '*', '/', '{', ',', ';', '=', ']']
+   46    | IDENTIFIER . '[' expr ']'
+
+    '['  shift, and go to state 14
+
+    $default  reduce using rule 45 (IDS)
+
+
+State 10
+
+    3 DIDS: DIDS . ',' IDS
+    6 decl_statement: INT DIDS . ';'
+
+    ','  shift, and go to state 15
+    ';'  shift, and go to state 16
+
+
+State 11
+
+    2 DIDS: IDS .
+
+    $default  reduce using rule 2 (DIDS)
+
+
+State 12
+
+    1 program: declaration_list '{' decl_statements '}' . statement_list '{' code_statements '}'
+
+    statement_list  shift, and go to state 17
+
+
+State 13
+
+    5 decl_statements: decl_statements decl_statement .
+
+    $default  reduce using rule 5 (decl_statements)
+
+
+State 14
+
+   32 expr: . term
+   33     | . expr '+' expr
+   34     | . expr '*' expr
+   35     | . expr '-' expr
+   36     | . expr '/' expr
+   43 term: . IDS
+   44     | . NUMBER
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+   46    | IDENTIFIER '[' . expr ']'
+
+    NUMBER      shift, and go to state 18
+    IDENTIFIER  shift, and go to state 9
+
+    expr  go to state 19
+    term  go to state 20
+    IDS   go to state 21
+
+
+State 15
+
+    3 DIDS: DIDS ',' . IDS
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    IDENTIFIER  shift, and go to state 9
+
+    IDS  go to state 22
+
+
+State 16
+
+    6 decl_statement: INT DIDS ';' .
+
+    $default  reduce using rule 6 (decl_statement)
+
+
+State 17
+
+    1 program: declaration_list '{' decl_statements '}' statement_list . '{' code_statements '}'
+
+    '{'  shift, and go to state 23
+
+
+State 18
+
+   44 term: NUMBER .
+
+    $default  reduce using rule 44 (term)
+
+
+State 19
+
+   33 expr: expr . '+' expr
+   34     | expr . '*' expr
+   35     | expr . '-' expr
+   36     | expr . '/' expr
+   46 IDS: IDENTIFIER '[' expr . ']'
+
+    '+'  shift, and go to state 24
+    '-'  shift, and go to state 25
+    '*'  shift, and go to state 26
+    '/'  shift, and go to state 27
+    ']'  shift, and go to state 28
+
+
+State 20
+
+   32 expr: term .
+
+    $default  reduce using rule 32 (expr)
+
+
+State 21
+
+   43 term: IDS .
+
+    $default  reduce using rule 43 (term)
+
+
+State 22
+
+    3 DIDS: DIDS ',' IDS .
+
+    $default  reduce using rule 3 (DIDS)
+
+
+State 23
+
+    1 program: declaration_list '{' decl_statements '}' statement_list '{' . code_statements '}'
+    8 code_statements: . code_statement
+    9                | . code_statements code_statement
+   10 code_statement: . loops
+   11               | . ifc
+   12               | . io ';'
+   13               | . equals ';'
+   14               | . ';'
+   15 loops: . forloop
+   16      | . whileloop
+   17 io: . out
+   18   | . scan
+   19 forloop: . FOR IDS '=' NUMBER ',' NUMBER ',' NUMBER '{' code_statements '}'
+   20        | . FOR IDS '=' NUMBER ',' NUMBER '{' code_statements '}'
+   21 whileloop: . WHILE boolexpr '{' code_statements '}' ';'
+   22 ifc: . IF boolexpr '{' code_statements '}' ELSE '{' code_statements '}'
+   23    | . IF boolexpr '{' code_statements '}'
+   24 equals: . IDS '=' expr
+   25 scan: . READ MIDS
+   26 out: . PRINT statement
+   27    | . PRINTLN statement
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    IDENTIFIER  shift, and go to state 9
+    FOR         shift, and go to state 29
+    IF          shift, and go to state 30
+    WHILE       shift, and go to state 31
+    PRINT       shift, and go to state 32
+    PRINTLN     shift, and go to state 33
+    READ        shift, and go to state 34
+    ';'         shift, and go to state 35
+
+    code_statements  go to state 36
+    code_statement   go to state 37
+    loops            go to state 38
+    io               go to state 39
+    forloop          go to state 40
+    whileloop        go to state 41
+    ifc              go to state 42
+    equals           go to state 43
+    scan             go to state 44
+    out              go to state 45
+    IDS              go to state 46
+
+
+State 24
+
+   32 expr: . term
+   33     | . expr '+' expr
+   33     | expr '+' . expr
+   34     | . expr '*' expr
+   35     | . expr '-' expr
+   36     | . expr '/' expr
+   43 term: . IDS
+   44     | . NUMBER
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    NUMBER      shift, and go to state 18
+    IDENTIFIER  shift, and go to state 9
+
+    expr  go to state 47
+    term  go to state 20
+    IDS   go to state 21
+
+
+State 25
+
+   32 expr: . term
+   33     | . expr '+' expr
+   34     | . expr '*' expr
+   35     | . expr '-' expr
+   35     | expr '-' . expr
+   36     | . expr '/' expr
+   43 term: . IDS
+   44     | . NUMBER
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    NUMBER      shift, and go to state 18
+    IDENTIFIER  shift, and go to state 9
+
+    expr  go to state 48
+    term  go to state 20
+    IDS   go to state 21
+
+
+State 26
+
+   32 expr: . term
+   33     | . expr '+' expr
+   34     | . expr '*' expr
+   34     | expr '*' . expr
+   35     | . expr '-' expr
+   36     | . expr '/' expr
+   43 term: . IDS
+   44     | . NUMBER
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    NUMBER      shift, and go to state 18
+    IDENTIFIER  shift, and go to state 9
+
+    expr  go to state 49
+    term  go to state 20
+    IDS   go to state 21
+
+
+State 27
+
+   32 expr: . term
+   33     | . expr '+' expr
+   34     | . expr '*' expr
+   35     | . expr '-' expr
+   36     | . expr '/' expr
+   36     | expr '/' . expr
+   43 term: . IDS
+   44     | . NUMBER
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    NUMBER      shift, and go to state 18
+    IDENTIFIER  shift, and go to state 9
+
+    expr  go to state 50
+    term  go to state 20
+    IDS   go to state 21
+
+
+State 28
+
+   46 IDS: IDENTIFIER '[' expr ']' .
+
+    $default  reduce using rule 46 (IDS)
+
+
+State 29
+
+   19 forloop: FOR . IDS '=' NUMBER ',' NUMBER ',' NUMBER '{' code_statements '}'
+   20        | FOR . IDS '=' NUMBER ',' NUMBER '{' code_statements '}'
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    IDENTIFIER  shift, and go to state 9
+
+    IDS  go to state 51
+
+
+State 30
+
+   22 ifc: IF . boolexpr '{' code_statements '}' ELSE '{' code_statements '}'
+   23    | IF . boolexpr '{' code_statements '}'
+   32 expr: . term
+   33     | . expr '+' expr
+   34     | . expr '*' expr
+   35     | . expr '-' expr
+   36     | . expr '/' expr
+   37 boolexpr: . expr GT expr
+   38         | . expr GTE expr
+   39         | . expr LT expr
+   40         | . expr LTE expr
+   41         | . expr DE expr
+   42         | . expr NE expr
+   43 term: . IDS
+   44     | . NUMBER
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    NUMBER      shift, and go to state 18
+    IDENTIFIER  shift, and go to state 9
+
+    expr      go to state 52
+    boolexpr  go to state 53
+    term      go to state 20
+    IDS       go to state 21
+
+
+State 31
+
+   21 whileloop: WHILE . boolexpr '{' code_statements '}' ';'
+   32 expr: . term
+   33     | . expr '+' expr
+   34     | . expr '*' expr
+   35     | . expr '-' expr
+   36     | . expr '/' expr
+   37 boolexpr: . expr GT expr
+   38         | . expr GTE expr
+   39         | . expr LT expr
+   40         | . expr LTE expr
+   41         | . expr DE expr
+   42         | . expr NE expr
+   43 term: . IDS
+   44     | . NUMBER
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    NUMBER      shift, and go to state 18
+    IDENTIFIER  shift, and go to state 9
+
+    expr      go to state 52
+    boolexpr  go to state 54
+    term      go to state 20
+    IDS       go to state 21
+
+
+State 32
+
+   26 out: PRINT . statement
+   28 statement: . prints
+   29          | . statement ',' prints
+   30 prints: . STRING
+   31       | . expr
+   32 expr: . term
+   33     | . expr '+' expr
+   34     | . expr '*' expr
+   35     | . expr '-' expr
+   36     | . expr '/' expr
+   43 term: . IDS
+   44     | . NUMBER
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    NUMBER      shift, and go to state 18
+    IDENTIFIER  shift, and go to state 9
+    STRING      shift, and go to state 55
+
+    statement  go to state 56
+    prints     go to state 57
+    expr       go to state 58
+    term       go to state 20
+    IDS        go to state 21
+
+
+State 33
+
+   27 out: PRINTLN . statement
+   28 statement: . prints
+   29          | . statement ',' prints
+   30 prints: . STRING
+   31       | . expr
+   32 expr: . term
+   33     | . expr '+' expr
+   34     | . expr '*' expr
+   35     | . expr '-' expr
+   36     | . expr '/' expr
+   43 term: . IDS
+   44     | . NUMBER
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    NUMBER      shift, and go to state 18
+    IDENTIFIER  shift, and go to state 9
+    STRING      shift, and go to state 55
+
+    statement  go to state 59
+    prints     go to state 57
+    expr       go to state 58
+    term       go to state 20
+    IDS        go to state 21
+
+
+State 34
+
+   25 scan: READ . MIDS
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+   47 MIDS: . IDS
+   48     | . MIDS ',' IDS
+
+    IDENTIFIER  shift, and go to state 9
+
+    IDS   go to state 60
+    MIDS  go to state 61
+
+
+State 35
+
+   14 code_statement: ';' .
+
+    $default  reduce using rule 14 (code_statement)
+
+
+State 36
+
+    1 program: declaration_list '{' decl_statements '}' statement_list '{' code_statements . '}'
+    9 code_statements: code_statements . code_statement
+   10 code_statement: . loops
+   11               | . ifc
+   12               | . io ';'
+   13               | . equals ';'
+   14               | . ';'
+   15 loops: . forloop
+   16      | . whileloop
+   17 io: . out
+   18   | . scan
+   19 forloop: . FOR IDS '=' NUMBER ',' NUMBER ',' NUMBER '{' code_statements '}'
+   20        | . FOR IDS '=' NUMBER ',' NUMBER '{' code_statements '}'
+   21 whileloop: . WHILE boolexpr '{' code_statements '}' ';'
+   22 ifc: . IF boolexpr '{' code_statements '}' ELSE '{' code_statements '}'
+   23    | . IF boolexpr '{' code_statements '}'
+   24 equals: . IDS '=' expr
+   25 scan: . READ MIDS
+   26 out: . PRINT statement
+   27    | . PRINTLN statement
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    IDENTIFIER  shift, and go to state 9
+    FOR         shift, and go to state 29
+    IF          shift, and go to state 30
+    WHILE       shift, and go to state 31
+    PRINT       shift, and go to state 32
+    PRINTLN     shift, and go to state 33
+    READ        shift, and go to state 34
+    '}'         shift, and go to state 62
+    ';'         shift, and go to state 35
+
+    code_statement  go to state 63
+    loops           go to state 38
+    io              go to state 39
+    forloop         go to state 40
+    whileloop       go to state 41
+    ifc             go to state 42
+    equals          go to state 43
+    scan            go to state 44
+    out             go to state 45
+    IDS             go to state 46
+
+
+State 37
+
+    8 code_statements: code_statement .
+
+    $default  reduce using rule 8 (code_statements)
+
+
+State 38
+
+   10 code_statement: loops .
+
+    $default  reduce using rule 10 (code_statement)
+
+
+State 39
+
+   12 code_statement: io . ';'
+
+    ';'  shift, and go to state 64
+
+
+State 40
+
+   15 loops: forloop .
+
+    $default  reduce using rule 15 (loops)
+
+
+State 41
+
+   16 loops: whileloop .
+
+    $default  reduce using rule 16 (loops)
+
+
+State 42
+
+   11 code_statement: ifc .
+
+    $default  reduce using rule 11 (code_statement)
+
+
+State 43
+
+   13 code_statement: equals . ';'
+
+    ';'  shift, and go to state 65
+
+
+State 44
+
+   18 io: scan .
+
+    $default  reduce using rule 18 (io)
+
+
+State 45
+
+   17 io: out .
+
+    $default  reduce using rule 17 (io)
+
+
+State 46
+
+   24 equals: IDS . '=' expr
+
+    '='  shift, and go to state 66
+
+
+State 47
+
+   33 expr: expr . '+' expr
+   33     | expr '+' expr .  [GT, GTE, LT, LTE, DE, NE, '+', '-', '{', ',', ';', ']']
+   34     | expr . '*' expr
+   35     | expr . '-' expr
+   36     | expr . '/' expr
+
+    '*'  shift, and go to state 26
+    '/'  shift, and go to state 27
+
+    $default  reduce using rule 33 (expr)
+
+    Conflict between rule 33 and token '+' resolved as reduce (%left '+').
+    Conflict between rule 33 and token '-' resolved as reduce (%left '-').
+    Conflict between rule 33 and token '*' resolved as shift ('+' < '*').
+    Conflict between rule 33 and token '/' resolved as shift ('+' < '/').
+
+
+State 48
+
+   33 expr: expr . '+' expr
+   34     | expr . '*' expr
+   35     | expr . '-' expr
+   35     | expr '-' expr .  [GT, GTE, LT, LTE, DE, NE, '+', '-', '{', ',', ';', ']']
+   36     | expr . '/' expr
+
+    '*'  shift, and go to state 26
+    '/'  shift, and go to state 27
+
+    $default  reduce using rule 35 (expr)
+
+    Conflict between rule 35 and token '+' resolved as reduce (%left '+').
+    Conflict between rule 35 and token '-' resolved as reduce (%left '-').
+    Conflict between rule 35 and token '*' resolved as shift ('-' < '*').
+    Conflict between rule 35 and token '/' resolved as shift ('-' < '/').
+
+
+State 49
+
+   33 expr: expr . '+' expr
+   34     | expr . '*' expr
+   34     | expr '*' expr .  [GT, GTE, LT, LTE, DE, NE, '+', '-', '*', '/', '{', ',', ';', ']']
+   35     | expr . '-' expr
+   36     | expr . '/' expr
+
+    $default  reduce using rule 34 (expr)
+
+    Conflict between rule 34 and token '+' resolved as reduce ('+' < '*').
+    Conflict between rule 34 and token '-' resolved as reduce ('-' < '*').
+    Conflict between rule 34 and token '*' resolved as reduce (%left '*').
+    Conflict between rule 34 and token '/' resolved as reduce (%left '/').
+
+
+State 50
+
+   33 expr: expr . '+' expr
+   34     | expr . '*' expr
+   35     | expr . '-' expr
+   36     | expr . '/' expr
+   36     | expr '/' expr .  [GT, GTE, LT, LTE, DE, NE, '+', '-', '*', '/', '{', ',', ';', ']']
+
+    $default  reduce using rule 36 (expr)
+
+    Conflict between rule 36 and token '+' resolved as reduce ('+' < '/').
+    Conflict between rule 36 and token '-' resolved as reduce ('-' < '/').
+    Conflict between rule 36 and token '*' resolved as reduce (%left '*').
+    Conflict between rule 36 and token '/' resolved as reduce (%left '/').
+
+
+State 51
+
+   19 forloop: FOR IDS . '=' NUMBER ',' NUMBER ',' NUMBER '{' code_statements '}'
+   20        | FOR IDS . '=' NUMBER ',' NUMBER '{' code_statements '}'
+
+    '='  shift, and go to state 67
+
+
+State 52
+
+   33 expr: expr . '+' expr
+   34     | expr . '*' expr
+   35     | expr . '-' expr
+   36     | expr . '/' expr
+   37 boolexpr: expr . GT expr
+   38         | expr . GTE expr
+   39         | expr . LT expr
+   40         | expr . LTE expr
+   41         | expr . DE expr
+   42         | expr . NE expr
+
+    GT   shift, and go to state 68
+    GTE  shift, and go to state 69
+    LT   shift, and go to state 70
+    LTE  shift, and go to state 71
+    DE   shift, and go to state 72
+    NE   shift, and go to state 73
+    '+'  shift, and go to state 24
+    '-'  shift, and go to state 25
+    '*'  shift, and go to state 26
+    '/'  shift, and go to state 27
+
+
+State 53
+
+   22 ifc: IF boolexpr . '{' code_statements '}' ELSE '{' code_statements '}'
+   23    | IF boolexpr . '{' code_statements '}'
+
+    '{'  shift, and go to state 74
+
+
+State 54
+
+   21 whileloop: WHILE boolexpr . '{' code_statements '}' ';'
+
+    '{'  shift, and go to state 75
+
+
+State 55
+
+   30 prints: STRING .
+
+    $default  reduce using rule 30 (prints)
+
+
+State 56
+
+   26 out: PRINT statement .  [';']
+   29 statement: statement . ',' prints
+
+    ','  shift, and go to state 76
+
+    $default  reduce using rule 26 (out)
+
+
+State 57
+
+   28 statement: prints .
+
+    $default  reduce using rule 28 (statement)
+
+
+State 58
+
+   31 prints: expr .  [',', ';']
+   33 expr: expr . '+' expr
+   34     | expr . '*' expr
+   35     | expr . '-' expr
+   36     | expr . '/' expr
+
+    '+'  shift, and go to state 24
+    '-'  shift, and go to state 25
+    '*'  shift, and go to state 26
+    '/'  shift, and go to state 27
+
+    $default  reduce using rule 31 (prints)
+
+
+State 59
+
+   27 out: PRINTLN statement .  [';']
+   29 statement: statement . ',' prints
+
+    ','  shift, and go to state 76
+
+    $default  reduce using rule 27 (out)
+
+
+State 60
+
+   47 MIDS: IDS .
+
+    $default  reduce using rule 47 (MIDS)
+
+
+State 61
+
+   25 scan: READ MIDS .  [';']
+   48 MIDS: MIDS . ',' IDS
+
+    ','  shift, and go to state 77
+
+    $default  reduce using rule 25 (scan)
+
+
+State 62
+
+    1 program: declaration_list '{' decl_statements '}' statement_list '{' code_statements '}' .
+
+    $default  reduce using rule 1 (program)
+
+
+State 63
+
+    9 code_statements: code_statements code_statement .
+
+    $default  reduce using rule 9 (code_statements)
+
+
+State 64
+
+   12 code_statement: io ';' .
+
+    $default  reduce using rule 12 (code_statement)
+
+
+State 65
+
+   13 code_statement: equals ';' .
+
+    $default  reduce using rule 13 (code_statement)
+
+
+State 66
+
+   24 equals: IDS '=' . expr
+   32 expr: . term
+   33     | . expr '+' expr
+   34     | . expr '*' expr
+   35     | . expr '-' expr
+   36     | . expr '/' expr
+   43 term: . IDS
+   44     | . NUMBER
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    NUMBER      shift, and go to state 18
+    IDENTIFIER  shift, and go to state 9
+
+    expr  go to state 78
+    term  go to state 20
+    IDS   go to state 21
+
+
+State 67
+
+   19 forloop: FOR IDS '=' . NUMBER ',' NUMBER ',' NUMBER '{' code_statements '}'
+   20        | FOR IDS '=' . NUMBER ',' NUMBER '{' code_statements '}'
+
+    NUMBER  shift, and go to state 79
+
+
+State 68
+
+   32 expr: . term
+   33     | . expr '+' expr
+   34     | . expr '*' expr
+   35     | . expr '-' expr
+   36     | . expr '/' expr
+   37 boolexpr: expr GT . expr
+   43 term: . IDS
+   44     | . NUMBER
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    NUMBER      shift, and go to state 18
+    IDENTIFIER  shift, and go to state 9
+
+    expr  go to state 80
+    term  go to state 20
+    IDS   go to state 21
+
+
+State 69
+
+   32 expr: . term
+   33     | . expr '+' expr
+   34     | . expr '*' expr
+   35     | . expr '-' expr
+   36     | . expr '/' expr
+   38 boolexpr: expr GTE . expr
+   43 term: . IDS
+   44     | . NUMBER
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    NUMBER      shift, and go to state 18
+    IDENTIFIER  shift, and go to state 9
+
+    expr  go to state 81
+    term  go to state 20
+    IDS   go to state 21
+
+
+State 70
+
+   32 expr: . term
+   33     | . expr '+' expr
+   34     | . expr '*' expr
+   35     | . expr '-' expr
+   36     | . expr '/' expr
+   39 boolexpr: expr LT . expr
+   43 term: . IDS
+   44     | . NUMBER
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    NUMBER      shift, and go to state 18
+    IDENTIFIER  shift, and go to state 9
+
+    expr  go to state 82
+    term  go to state 20
+    IDS   go to state 21
+
+
+State 71
+
+   32 expr: . term
+   33     | . expr '+' expr
+   34     | . expr '*' expr
+   35     | . expr '-' expr
+   36     | . expr '/' expr
+   40 boolexpr: expr LTE . expr
+   43 term: . IDS
+   44     | . NUMBER
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    NUMBER      shift, and go to state 18
+    IDENTIFIER  shift, and go to state 9
+
+    expr  go to state 83
+    term  go to state 20
+    IDS   go to state 21
+
+
+State 72
+
+   32 expr: . term
+   33     | . expr '+' expr
+   34     | . expr '*' expr
+   35     | . expr '-' expr
+   36     | . expr '/' expr
+   41 boolexpr: expr DE . expr
+   43 term: . IDS
+   44     | . NUMBER
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    NUMBER      shift, and go to state 18
+    IDENTIFIER  shift, and go to state 9
+
+    expr  go to state 84
+    term  go to state 20
+    IDS   go to state 21
+
+
+State 73
+
+   32 expr: . term
+   33     | . expr '+' expr
+   34     | . expr '*' expr
+   35     | . expr '-' expr
+   36     | . expr '/' expr
+   42 boolexpr: expr NE . expr
+   43 term: . IDS
+   44     | . NUMBER
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    NUMBER      shift, and go to state 18
+    IDENTIFIER  shift, and go to state 9
+
+    expr  go to state 85
+    term  go to state 20
+    IDS   go to state 21
+
+
+State 74
+
+    8 code_statements: . code_statement
+    9                | . code_statements code_statement
+   10 code_statement: . loops
+   11               | . ifc
+   12               | . io ';'
+   13               | . equals ';'
+   14               | . ';'
+   15 loops: . forloop
+   16      | . whileloop
+   17 io: . out
+   18   | . scan
+   19 forloop: . FOR IDS '=' NUMBER ',' NUMBER ',' NUMBER '{' code_statements '}'
+   20        | . FOR IDS '=' NUMBER ',' NUMBER '{' code_statements '}'
+   21 whileloop: . WHILE boolexpr '{' code_statements '}' ';'
+   22 ifc: . IF boolexpr '{' code_statements '}' ELSE '{' code_statements '}'
+   22    | IF boolexpr '{' . code_statements '}' ELSE '{' code_statements '}'
+   23    | . IF boolexpr '{' code_statements '}'
+   23    | IF boolexpr '{' . code_statements '}'
+   24 equals: . IDS '=' expr
+   25 scan: . READ MIDS
+   26 out: . PRINT statement
+   27    | . PRINTLN statement
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    IDENTIFIER  shift, and go to state 9
+    FOR         shift, and go to state 29
+    IF          shift, and go to state 30
+    WHILE       shift, and go to state 31
+    PRINT       shift, and go to state 32
+    PRINTLN     shift, and go to state 33
+    READ        shift, and go to state 34
+    ';'         shift, and go to state 35
+
+    code_statements  go to state 86
+    code_statement   go to state 37
+    loops            go to state 38
+    io               go to state 39
+    forloop          go to state 40
+    whileloop        go to state 41
+    ifc              go to state 42
+    equals           go to state 43
+    scan             go to state 44
+    out              go to state 45
+    IDS              go to state 46
+
+
+State 75
+
+    8 code_statements: . code_statement
+    9                | . code_statements code_statement
+   10 code_statement: . loops
+   11               | . ifc
+   12               | . io ';'
+   13               | . equals ';'
+   14               | . ';'
+   15 loops: . forloop
+   16      | . whileloop
+   17 io: . out
+   18   | . scan
+   19 forloop: . FOR IDS '=' NUMBER ',' NUMBER ',' NUMBER '{' code_statements '}'
+   20        | . FOR IDS '=' NUMBER ',' NUMBER '{' code_statements '}'
+   21 whileloop: . WHILE boolexpr '{' code_statements '}' ';'
+   21          | WHILE boolexpr '{' . code_statements '}' ';'
+   22 ifc: . IF boolexpr '{' code_statements '}' ELSE '{' code_statements '}'
+   23    | . IF boolexpr '{' code_statements '}'
+   24 equals: . IDS '=' expr
+   25 scan: . READ MIDS
+   26 out: . PRINT statement
+   27    | . PRINTLN statement
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    IDENTIFIER  shift, and go to state 9
+    FOR         shift, and go to state 29
+    IF          shift, and go to state 30
+    WHILE       shift, and go to state 31
+    PRINT       shift, and go to state 32
+    PRINTLN     shift, and go to state 33
+    READ        shift, and go to state 34
+    ';'         shift, and go to state 35
+
+    code_statements  go to state 87
+    code_statement   go to state 37
+    loops            go to state 38
+    io               go to state 39
+    forloop          go to state 40
+    whileloop        go to state 41
+    ifc              go to state 42
+    equals           go to state 43
+    scan             go to state 44
+    out              go to state 45
+    IDS              go to state 46
+
+
+State 76
+
+   29 statement: statement ',' . prints
+   30 prints: . STRING
+   31       | . expr
+   32 expr: . term
+   33     | . expr '+' expr
+   34     | . expr '*' expr
+   35     | . expr '-' expr
+   36     | . expr '/' expr
+   43 term: . IDS
+   44     | . NUMBER
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    NUMBER      shift, and go to state 18
+    IDENTIFIER  shift, and go to state 9
+    STRING      shift, and go to state 55
+
+    prints  go to state 88
+    expr    go to state 58
+    term    go to state 20
+    IDS     go to state 21
+
+
+State 77
+
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+   48 MIDS: MIDS ',' . IDS
+
+    IDENTIFIER  shift, and go to state 9
+
+    IDS  go to state 89
+
+
+State 78
+
+   24 equals: IDS '=' expr .  [';']
+   33 expr: expr . '+' expr
+   34     | expr . '*' expr
+   35     | expr . '-' expr
+   36     | expr . '/' expr
+
+    '+'  shift, and go to state 24
+    '-'  shift, and go to state 25
+    '*'  shift, and go to state 26
+    '/'  shift, and go to state 27
+
+    $default  reduce using rule 24 (equals)
+
+
+State 79
+
+   19 forloop: FOR IDS '=' NUMBER . ',' NUMBER ',' NUMBER '{' code_statements '}'
+   20        | FOR IDS '=' NUMBER . ',' NUMBER '{' code_statements '}'
+
+    ','  shift, and go to state 90
+
+
+State 80
+
+   33 expr: expr . '+' expr
+   34     | expr . '*' expr
+   35     | expr . '-' expr
+   36     | expr . '/' expr
+   37 boolexpr: expr GT expr .  ['{']
+
+    '+'  shift, and go to state 24
+    '-'  shift, and go to state 25
+    '*'  shift, and go to state 26
+    '/'  shift, and go to state 27
+
+    $default  reduce using rule 37 (boolexpr)
+
+
+State 81
+
+   33 expr: expr . '+' expr
+   34     | expr . '*' expr
+   35     | expr . '-' expr
+   36     | expr . '/' expr
+   38 boolexpr: expr GTE expr .  ['{']
+
+    '+'  shift, and go to state 24
+    '-'  shift, and go to state 25
+    '*'  shift, and go to state 26
+    '/'  shift, and go to state 27
+
+    $default  reduce using rule 38 (boolexpr)
+
+
+State 82
+
+   33 expr: expr . '+' expr
+   34     | expr . '*' expr
+   35     | expr . '-' expr
+   36     | expr . '/' expr
+   39 boolexpr: expr LT expr .  ['{']
+
+    '+'  shift, and go to state 24
+    '-'  shift, and go to state 25
+    '*'  shift, and go to state 26
+    '/'  shift, and go to state 27
+
+    $default  reduce using rule 39 (boolexpr)
+
+
+State 83
+
+   33 expr: expr . '+' expr
+   34     | expr . '*' expr
+   35     | expr . '-' expr
+   36     | expr . '/' expr
+   40 boolexpr: expr LTE expr .  ['{']
+
+    '+'  shift, and go to state 24
+    '-'  shift, and go to state 25
+    '*'  shift, and go to state 26
+    '/'  shift, and go to state 27
+
+    $default  reduce using rule 40 (boolexpr)
+
+
+State 84
+
+   33 expr: expr . '+' expr
+   34     | expr . '*' expr
+   35     | expr . '-' expr
+   36     | expr . '/' expr
+   41 boolexpr: expr DE expr .  ['{']
+
+    '+'  shift, and go to state 24
+    '-'  shift, and go to state 25
+    '*'  shift, and go to state 26
+    '/'  shift, and go to state 27
+
+    $default  reduce using rule 41 (boolexpr)
+
+
+State 85
+
+   33 expr: expr . '+' expr
+   34     | expr . '*' expr
+   35     | expr . '-' expr
+   36     | expr . '/' expr
+   42 boolexpr: expr NE expr .  ['{']
+
+    '+'  shift, and go to state 24
+    '-'  shift, and go to state 25
+    '*'  shift, and go to state 26
+    '/'  shift, and go to state 27
+
+    $default  reduce using rule 42 (boolexpr)
+
+
+State 86
+
+    9 code_statements: code_statements . code_statement
+   10 code_statement: . loops
+   11               | . ifc
+   12               | . io ';'
+   13               | . equals ';'
+   14               | . ';'
+   15 loops: . forloop
+   16      | . whileloop
+   17 io: . out
+   18   | . scan
+   19 forloop: . FOR IDS '=' NUMBER ',' NUMBER ',' NUMBER '{' code_statements '}'
+   20        | . FOR IDS '=' NUMBER ',' NUMBER '{' code_statements '}'
+   21 whileloop: . WHILE boolexpr '{' code_statements '}' ';'
+   22 ifc: . IF boolexpr '{' code_statements '}' ELSE '{' code_statements '}'
+   22    | IF boolexpr '{' code_statements . '}' ELSE '{' code_statements '}'
+   23    | . IF boolexpr '{' code_statements '}'
+   23    | IF boolexpr '{' code_statements . '}'
+   24 equals: . IDS '=' expr
+   25 scan: . READ MIDS
+   26 out: . PRINT statement
+   27    | . PRINTLN statement
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    IDENTIFIER  shift, and go to state 9
+    FOR         shift, and go to state 29
+    IF          shift, and go to state 30
+    WHILE       shift, and go to state 31
+    PRINT       shift, and go to state 32
+    PRINTLN     shift, and go to state 33
+    READ        shift, and go to state 34
+    '}'         shift, and go to state 91
+    ';'         shift, and go to state 35
+
+    code_statement  go to state 63
+    loops           go to state 38
+    io              go to state 39
+    forloop         go to state 40
+    whileloop       go to state 41
+    ifc             go to state 42
+    equals          go to state 43
+    scan            go to state 44
+    out             go to state 45
+    IDS             go to state 46
+
+
+State 87
+
+    9 code_statements: code_statements . code_statement
+   10 code_statement: . loops
+   11               | . ifc
+   12               | . io ';'
+   13               | . equals ';'
+   14               | . ';'
+   15 loops: . forloop
+   16      | . whileloop
+   17 io: . out
+   18   | . scan
+   19 forloop: . FOR IDS '=' NUMBER ',' NUMBER ',' NUMBER '{' code_statements '}'
+   20        | . FOR IDS '=' NUMBER ',' NUMBER '{' code_statements '}'
+   21 whileloop: . WHILE boolexpr '{' code_statements '}' ';'
+   21          | WHILE boolexpr '{' code_statements . '}' ';'
+   22 ifc: . IF boolexpr '{' code_statements '}' ELSE '{' code_statements '}'
+   23    | . IF boolexpr '{' code_statements '}'
+   24 equals: . IDS '=' expr
+   25 scan: . READ MIDS
+   26 out: . PRINT statement
+   27    | . PRINTLN statement
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    IDENTIFIER  shift, and go to state 9
+    FOR         shift, and go to state 29
+    IF          shift, and go to state 30
+    WHILE       shift, and go to state 31
+    PRINT       shift, and go to state 32
+    PRINTLN     shift, and go to state 33
+    READ        shift, and go to state 34
+    '}'         shift, and go to state 92
+    ';'         shift, and go to state 35
+
+    code_statement  go to state 63
+    loops           go to state 38
+    io              go to state 39
+    forloop         go to state 40
+    whileloop       go to state 41
+    ifc             go to state 42
+    equals          go to state 43
+    scan            go to state 44
+    out             go to state 45
+    IDS             go to state 46
+
+
+State 88
+
+   29 statement: statement ',' prints .
+
+    $default  reduce using rule 29 (statement)
+
+
+State 89
+
+   48 MIDS: MIDS ',' IDS .
+
+    $default  reduce using rule 48 (MIDS)
+
+
+State 90
+
+   19 forloop: FOR IDS '=' NUMBER ',' . NUMBER ',' NUMBER '{' code_statements '}'
+   20        | FOR IDS '=' NUMBER ',' . NUMBER '{' code_statements '}'
+
+    NUMBER  shift, and go to state 93
+
+
+State 91
+
+   22 ifc: IF boolexpr '{' code_statements '}' . ELSE '{' code_statements '}'
+   23    | IF boolexpr '{' code_statements '}' .  [IDENTIFIER, FOR, IF, WHILE, PRINT, PRINTLN, READ, '}', ';']
+
+    ELSE  shift, and go to state 94
+
+    $default  reduce using rule 23 (ifc)
+
+
+State 92
+
+   21 whileloop: WHILE boolexpr '{' code_statements '}' . ';'
+
+    ';'  shift, and go to state 95
+
+
+State 93
+
+   19 forloop: FOR IDS '=' NUMBER ',' NUMBER . ',' NUMBER '{' code_statements '}'
+   20        | FOR IDS '=' NUMBER ',' NUMBER . '{' code_statements '}'
+
+    '{'  shift, and go to state 96
+    ','  shift, and go to state 97
+
+
+State 94
+
+   22 ifc: IF boolexpr '{' code_statements '}' ELSE . '{' code_statements '}'
+
+    '{'  shift, and go to state 98
+
+
+State 95
+
+   21 whileloop: WHILE boolexpr '{' code_statements '}' ';' .
+
+    $default  reduce using rule 21 (whileloop)
+
+
+State 96
+
+    8 code_statements: . code_statement
+    9                | . code_statements code_statement
+   10 code_statement: . loops
+   11               | . ifc
+   12               | . io ';'
+   13               | . equals ';'
+   14               | . ';'
+   15 loops: . forloop
+   16      | . whileloop
+   17 io: . out
+   18   | . scan
+   19 forloop: . FOR IDS '=' NUMBER ',' NUMBER ',' NUMBER '{' code_statements '}'
+   20        | . FOR IDS '=' NUMBER ',' NUMBER '{' code_statements '}'
+   20        | FOR IDS '=' NUMBER ',' NUMBER '{' . code_statements '}'
+   21 whileloop: . WHILE boolexpr '{' code_statements '}' ';'
+   22 ifc: . IF boolexpr '{' code_statements '}' ELSE '{' code_statements '}'
+   23    | . IF boolexpr '{' code_statements '}'
+   24 equals: . IDS '=' expr
+   25 scan: . READ MIDS
+   26 out: . PRINT statement
+   27    | . PRINTLN statement
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    IDENTIFIER  shift, and go to state 9
+    FOR         shift, and go to state 29
+    IF          shift, and go to state 30
+    WHILE       shift, and go to state 31
+    PRINT       shift, and go to state 32
+    PRINTLN     shift, and go to state 33
+    READ        shift, and go to state 34
+    ';'         shift, and go to state 35
+
+    code_statements  go to state 99
+    code_statement   go to state 37
+    loops            go to state 38
+    io               go to state 39
+    forloop          go to state 40
+    whileloop        go to state 41
+    ifc              go to state 42
+    equals           go to state 43
+    scan             go to state 44
+    out              go to state 45
+    IDS              go to state 46
+
+
+State 97
+
+   19 forloop: FOR IDS '=' NUMBER ',' NUMBER ',' . NUMBER '{' code_statements '}'
+
+    NUMBER  shift, and go to state 100
+
+
+State 98
+
+    8 code_statements: . code_statement
+    9                | . code_statements code_statement
+   10 code_statement: . loops
+   11               | . ifc
+   12               | . io ';'
+   13               | . equals ';'
+   14               | . ';'
+   15 loops: . forloop
+   16      | . whileloop
+   17 io: . out
+   18   | . scan
+   19 forloop: . FOR IDS '=' NUMBER ',' NUMBER ',' NUMBER '{' code_statements '}'
+   20        | . FOR IDS '=' NUMBER ',' NUMBER '{' code_statements '}'
+   21 whileloop: . WHILE boolexpr '{' code_statements '}' ';'
+   22 ifc: . IF boolexpr '{' code_statements '}' ELSE '{' code_statements '}'
+   22    | IF boolexpr '{' code_statements '}' ELSE '{' . code_statements '}'
+   23    | . IF boolexpr '{' code_statements '}'
+   24 equals: . IDS '=' expr
+   25 scan: . READ MIDS
+   26 out: . PRINT statement
+   27    | . PRINTLN statement
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    IDENTIFIER  shift, and go to state 9
+    FOR         shift, and go to state 29
+    IF          shift, and go to state 30
+    WHILE       shift, and go to state 31
+    PRINT       shift, and go to state 32
+    PRINTLN     shift, and go to state 33
+    READ        shift, and go to state 34
+    ';'         shift, and go to state 35
+
+    code_statements  go to state 101
+    code_statement   go to state 37
+    loops            go to state 38
+    io               go to state 39
+    forloop          go to state 40
+    whileloop        go to state 41
+    ifc              go to state 42
+    equals           go to state 43
+    scan             go to state 44
+    out              go to state 45
+    IDS              go to state 46
+
+
+State 99
+
+    9 code_statements: code_statements . code_statement
+   10 code_statement: . loops
+   11               | . ifc
+   12               | . io ';'
+   13               | . equals ';'
+   14               | . ';'
+   15 loops: . forloop
+   16      | . whileloop
+   17 io: . out
+   18   | . scan
+   19 forloop: . FOR IDS '=' NUMBER ',' NUMBER ',' NUMBER '{' code_statements '}'
+   20        | . FOR IDS '=' NUMBER ',' NUMBER '{' code_statements '}'
+   20        | FOR IDS '=' NUMBER ',' NUMBER '{' code_statements . '}'
+   21 whileloop: . WHILE boolexpr '{' code_statements '}' ';'
+   22 ifc: . IF boolexpr '{' code_statements '}' ELSE '{' code_statements '}'
+   23    | . IF boolexpr '{' code_statements '}'
+   24 equals: . IDS '=' expr
+   25 scan: . READ MIDS
+   26 out: . PRINT statement
+   27    | . PRINTLN statement
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    IDENTIFIER  shift, and go to state 9
+    FOR         shift, and go to state 29
+    IF          shift, and go to state 30
+    WHILE       shift, and go to state 31
+    PRINT       shift, and go to state 32
+    PRINTLN     shift, and go to state 33
+    READ        shift, and go to state 34
+    '}'         shift, and go to state 102
+    ';'         shift, and go to state 35
+
+    code_statement  go to state 63
+    loops           go to state 38
+    io              go to state 39
+    forloop         go to state 40
+    whileloop       go to state 41
+    ifc             go to state 42
+    equals          go to state 43
+    scan            go to state 44
+    out             go to state 45
+    IDS             go to state 46
+
+
+State 100
+
+   19 forloop: FOR IDS '=' NUMBER ',' NUMBER ',' NUMBER . '{' code_statements '}'
+
+    '{'  shift, and go to state 103
+
+
+State 101
+
+    9 code_statements: code_statements . code_statement
+   10 code_statement: . loops
+   11               | . ifc
+   12               | . io ';'
+   13               | . equals ';'
+   14               | . ';'
+   15 loops: . forloop
+   16      | . whileloop
+   17 io: . out
+   18   | . scan
+   19 forloop: . FOR IDS '=' NUMBER ',' NUMBER ',' NUMBER '{' code_statements '}'
+   20        | . FOR IDS '=' NUMBER ',' NUMBER '{' code_statements '}'
+   21 whileloop: . WHILE boolexpr '{' code_statements '}' ';'
+   22 ifc: . IF boolexpr '{' code_statements '}' ELSE '{' code_statements '}'
+   22    | IF boolexpr '{' code_statements '}' ELSE '{' code_statements . '}'
+   23    | . IF boolexpr '{' code_statements '}'
+   24 equals: . IDS '=' expr
+   25 scan: . READ MIDS
+   26 out: . PRINT statement
+   27    | . PRINTLN statement
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    IDENTIFIER  shift, and go to state 9
+    FOR         shift, and go to state 29
+    IF          shift, and go to state 30
+    WHILE       shift, and go to state 31
+    PRINT       shift, and go to state 32
+    PRINTLN     shift, and go to state 33
+    READ        shift, and go to state 34
+    '}'         shift, and go to state 104
+    ';'         shift, and go to state 35
+
+    code_statement  go to state 63
+    loops           go to state 38
+    io              go to state 39
+    forloop         go to state 40
+    whileloop       go to state 41
+    ifc             go to state 42
+    equals          go to state 43
+    scan            go to state 44
+    out             go to state 45
+    IDS             go to state 46
+
+
+State 102
+
+   20 forloop: FOR IDS '=' NUMBER ',' NUMBER '{' code_statements '}' .
+
+    $default  reduce using rule 20 (forloop)
+
+
+State 103
+
+    8 code_statements: . code_statement
+    9                | . code_statements code_statement
+   10 code_statement: . loops
+   11               | . ifc
+   12               | . io ';'
+   13               | . equals ';'
+   14               | . ';'
+   15 loops: . forloop
+   16      | . whileloop
+   17 io: . out
+   18   | . scan
+   19 forloop: . FOR IDS '=' NUMBER ',' NUMBER ',' NUMBER '{' code_statements '}'
+   19        | FOR IDS '=' NUMBER ',' NUMBER ',' NUMBER '{' . code_statements '}'
+   20        | . FOR IDS '=' NUMBER ',' NUMBER '{' code_statements '}'
+   21 whileloop: . WHILE boolexpr '{' code_statements '}' ';'
+   22 ifc: . IF boolexpr '{' code_statements '}' ELSE '{' code_statements '}'
+   23    | . IF boolexpr '{' code_statements '}'
+   24 equals: . IDS '=' expr
+   25 scan: . READ MIDS
+   26 out: . PRINT statement
+   27    | . PRINTLN statement
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    IDENTIFIER  shift, and go to state 9
+    FOR         shift, and go to state 29
+    IF          shift, and go to state 30
+    WHILE       shift, and go to state 31
+    PRINT       shift, and go to state 32
+    PRINTLN     shift, and go to state 33
+    READ        shift, and go to state 34
+    ';'         shift, and go to state 35
+
+    code_statements  go to state 105
+    code_statement   go to state 37
+    loops            go to state 38
+    io               go to state 39
+    forloop          go to state 40
+    whileloop        go to state 41
+    ifc              go to state 42
+    equals           go to state 43
+    scan             go to state 44
+    out              go to state 45
+    IDS              go to state 46
+
+
+State 104
+
+   22 ifc: IF boolexpr '{' code_statements '}' ELSE '{' code_statements '}' .
+
+    $default  reduce using rule 22 (ifc)
+
+
+State 105
+
+    9 code_statements: code_statements . code_statement
+   10 code_statement: . loops
+   11               | . ifc
+   12               | . io ';'
+   13               | . equals ';'
+   14               | . ';'
+   15 loops: . forloop
+   16      | . whileloop
+   17 io: . out
+   18   | . scan
+   19 forloop: . FOR IDS '=' NUMBER ',' NUMBER ',' NUMBER '{' code_statements '}'
+   19        | FOR IDS '=' NUMBER ',' NUMBER ',' NUMBER '{' code_statements . '}'
+   20        | . FOR IDS '=' NUMBER ',' NUMBER '{' code_statements '}'
+   21 whileloop: . WHILE boolexpr '{' code_statements '}' ';'
+   22 ifc: . IF boolexpr '{' code_statements '}' ELSE '{' code_statements '}'
+   23    | . IF boolexpr '{' code_statements '}'
+   24 equals: . IDS '=' expr
+   25 scan: . READ MIDS
+   26 out: . PRINT statement
+   27    | . PRINTLN statement
+   45 IDS: . IDENTIFIER
+   46    | . IDENTIFIER '[' expr ']'
+
+    IDENTIFIER  shift, and go to state 9
+    FOR         shift, and go to state 29
+    IF          shift, and go to state 30
+    WHILE       shift, and go to state 31
+    PRINT       shift, and go to state 32
+    PRINTLN     shift, and go to state 33
+    READ        shift, and go to state 34
+    '}'         shift, and go to state 106
+    ';'         shift, and go to state 35
+
+    code_statement  go to state 63
+    loops           go to state 38
+    io              go to state 39
+    forloop         go to state 40
+    whileloop       go to state 41
+    ifc             go to state 42
+    equals          go to state 43
+    scan            go to state 44
+    out             go to state 45
+    IDS             go to state 46
+
+
+State 106
+
+   19 forloop: FOR IDS '=' NUMBER ',' NUMBER ',' NUMBER '{' code_statements '}' .
+
+    $default  reduce using rule 19 (forloop)
