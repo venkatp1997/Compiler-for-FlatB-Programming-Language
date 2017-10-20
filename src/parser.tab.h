@@ -83,6 +83,7 @@ union YYSTYPE
 	Code_Statement *cs;
 	Code_Statement_Block *csb;
 	vector<Code_Statement*> *css;
+	GoTo* g;
 	Id *id;
 	vector<Id*> *ids;
 	Print *pr;
@@ -91,7 +92,7 @@ union YYSTYPE
 	BoolExpr* be;
 	Term* t;
 
-#line 95 "parser.tab.h" /* yacc.c:1909  */
+#line 96 "parser.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

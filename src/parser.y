@@ -19,6 +19,7 @@
 	Code_Statement *cs;
 	Code_Statement_Block *csb;
 	vector<Code_Statement*> *css;
+	GoTo* g;
 	Id *id;
 	vector<Id*> *ids;
 	Print *pr;
@@ -52,6 +53,7 @@
 %type <str> STRING;
 %type <str> IDENTIFIER;
 %type <num> NUMBER;
+%type <cs> gotoc;
 
 %start program
 %token declaration_list
@@ -94,17 +96,21 @@ decl_statements	:	decl_statement {$$ = new Decl_Statement($1);}
 decl_statement	: INT DIDS ';' {$$ = $2;}
 								| ';' {$$ = new vector<Id*>;}
 code_statements	:	code_statement {$$ = new Code_Statement_Block();$$->add($1);}
-								|	code_statements code_statement {$1->statements->push_back($2);$$ = $1;}
+							|	code_statement code_statements {$2->statements->insert($2->statements->begin(), $1);$$ = $2;}
+								| IDENTIFIER ':' code_statements {visitor->label_table[$1] = *($3->statements);$$ = $3;}
 
 code_statement	: loops {$$ = $1;}
 								| ifc {$$ = $1;}
 								|	io ';' {$$ = $1;}
 								|	equals ';' {$$ = $1;}
-								|	';' {$$ = new Code_Statement();}
+							
 loops	:	forloop {$$ = $1;}
 			|	whileloop {$$ = $1;}
+			| gotoc ';' {$$ = $1;}
 io		:	out {$$ = $1;}
 			| scan {$$ = $1;}
+gotoc	:	GOTO IDENTIFIER IF boolexpr {$$ = new GoTo($2, $4);}
+			| GOTO IDENTIFIER {$$ = new GoTo($2);}
 forloop : FOR IDS '=' NUMBER ',' NUMBER ',' NUMBER '{' code_statements '}' {$$ = new Forloop($2, $4, $6, $10, $8);}
 		| FOR IDS '=' NUMBER ',' NUMBER '{' code_statements '}' {$$ = new Forloop($2, $4, $6, $8);}
 whileloop : WHILE boolexpr '{' code_statements '}' {$$ = new Whileloop($2, $4);}
@@ -150,7 +156,6 @@ int main(int argc, char** argv) {
 	do {
 		yyparse();
 	} while (!feof(yyin));
-	interpreter *visitor = new interpreter();
 	root->accept(visitor);
 	return 0;
 }

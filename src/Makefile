@@ -1,5 +1,5 @@
 OBJ= bcc
-CXX = g++ -std=c++11 -Wall
+CXX = g++ -g -std=c++11 -Wall
 LEX = flex 
 YACC = bison -d --debug --verbose --report=all --warnings=all
 
