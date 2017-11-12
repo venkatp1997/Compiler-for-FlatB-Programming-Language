@@ -1,14 +1,15 @@
 declblock{
-	int compilersAssignmentRemains;
+	int a, b, c;
 }
 
 codeblock{
-  compilersAssignmentRemains = 1;
-  if compilersAssignmentRemains >= 1 {
-    print "labour ka \n\n\nkaam!";
+  a = 2;
+  if a <= 1 {
+    b = 13;
   }
   else {
-    print "finally";
+    b = 3;
   }
+  c = a + b;
 }
 

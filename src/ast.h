@@ -70,7 +70,7 @@ static Module *TheModule;
 static IRBuilder<> Builder(getGlobalContext());
 static map<std::string, Value*> NamedValues;
 Function *func_main;
-BasicBlock *block;
+BasicBlock *block_main;
 Module *module;
 stack<Code_Statement_Block*> blocks;
 class Program : public Node{
@@ -125,19 +125,32 @@ public:
   virtual Value *Codegen() = 0;
 };
 Value* Program::Codegen(){
-  this->dstatement->Codegen(), this->cstatement->Codegen();
+  Value* last = this->dstatement->Codegen();
+  last = this->cstatement->Codegen();
+  return last;
 }
 Value* Code_Statement_Block::Codegen(){
+  Value* last;
   for(auto u : *(this->statements))
-    u->Codegen();
+    last = u->Codegen();
+  return last;
+}
+void pushBlock(BasicBlock *block){
+   blocks.push(new Code_Statement_Block());
+   blocks.top()->ret = NULL;
+   blocks.top()->block = block; 
+}
+void popBlock(){
+  /* Code_Statement_Block *tmp = blocks.top(); */
+  blocks.pop();
+  /* delete tmp; */
 }
 class Expr : public Node{
 public:
 	virtual ~Expr(){
 	}
 	virtual int accept(Vstr* _v) =0;
-  virtual Value *Codegen(){
-  }
+  virtual Value *Codegen() = 0;
 };
 class Id : public Node{
 public:
@@ -148,12 +161,14 @@ public:
 	}
 	void accept(Vstr* _v){
 		_v->accept(this);
-	}
+  }
   virtual Value* Codegen();
 };
 Value* Decl_Statement::Codegen(){
+  Value* last;
   for(auto u : *(this->ids))
-    u->Codegen();
+    last = u->Codegen();
+  return last;
 }
 class Assignment : public Code_Statement{
 public:
@@ -167,12 +182,12 @@ public:
 	}
   virtual Value *Codegen(){
     cout << "Assignment for " << id->name << '\n';
-    return new StoreInst(exp->Codegen(), NamedValues[id->name], false, block);
+    return new StoreInst(exp->Codegen(), NamedValues[id->name], false, blocks.top()->block);
   }
 };
 Value* Id::Codegen(){
   cout << "Declaration for " << name << '\n';
-  AllocaInst *alloc = new AllocaInst(IntegerType::get(getGlobalContext(), 32), name.c_str(), block);
+  AllocaInst *alloc = new AllocaInst(IntegerType::get(getGlobalContext(), 32), name.c_str(), blocks.top()->block);
   NamedValues[name] = alloc;
   if(exp != NULL){
     Assignment* assn = new Assignment(new Id(name), exp);
@@ -203,8 +218,9 @@ class VarTerm : public Expr{
       return _v->accept(this);
     }
     virtual Value *Codegen(){
-      Value *V = NamedValues[id->name];
-      return V;
+      if(NamedValues.find(id->name) == NamedValues.end())
+        NamedValues[id->name] = ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 0, true);
+      return NamedValues[id->name];
     }
 };
 class Term : public Expr{
@@ -222,9 +238,9 @@ public:
 	}
   virtual Value *Codegen(){
     if(this->var == NULL)
-      num->Codegen();
+      return num->Codegen();
     else
-      var->Codegen();
+      return var->Codegen();
   }
 };
 class BinExpr : public Expr{
@@ -261,13 +277,15 @@ public:
   virtual Value *Codegen(){
     Value *L = l->Codegen();
     Value *R = r->Codegen();
+    if(L == 0 || R == 0)return 0;
     //Check if we need to change to double.
-    if(operand == "<")return Builder.CreateFCmpULT(L, R, "cmpltmp");
-    if(operand == "<=")return Builder.CreateFCmpULE(L, R, "cmpletmp");
-    if(operand == ">")return Builder.CreateFCmpUGT(L, R, "cmpgtmp");
-    if(operand == ">=")return Builder.CreateFCmpUGE(L, R, "cmpgetmp");
-    if(operand == "==")return Builder.CreateFCmpUEQ(L, R, "cmpeqtmp");
-    if(operand == "!=")return Builder.CreateFCmpUNE(L, R, "cmpnetmp");
+    if(operand == "<")L = Builder.CreateFCmpULT(L, R, "cmpltmp");
+    if(operand == "<=")L = Builder.CreateFCmpULE(L, R, "cmpletmp");
+    if(operand == ">")L = Builder.CreateFCmpUGT(L, R, "cmpgtmp");
+    if(operand == ">=")L = Builder.CreateFCmpUGE(L, R, "cmpgetmp");
+    if(operand == "==")L = Builder.CreateFCmpUEQ(L, R, "cmpeqtmp");
+    if(operand == "!=")L = Builder.CreateFCmpUNE(L, R, "cmpnetmp");
+    return Builder.CreateUIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
   }
 };
 class Forloop : public Code_Statement{
@@ -312,6 +330,60 @@ public:
 		_v->accept(this);
 	}
   virtual Value *Codegen(){
+    Value *CondV = boolexp->Codegen();
+    if (CondV == 0)
+      return 0;
+
+    // Convert condition to a bool by comparing equal to 0.0.
+    CondV = Builder.CreateFCmpONE(
+        CondV, ConstantFP::get(getGlobalContext(), APFloat(0.0)), "ifcond");
+
+    Function *TheFunction = func_main;
+
+    // Create blocks for the then and else cases.  Insert the 'then' block at the
+    // end of the function.
+    BasicBlock *ThenBB =
+        BasicBlock::Create(getGlobalContext(), "then", TheFunction);
+    BasicBlock *ElseBB = BasicBlock::Create(getGlobalContext(), "else");
+    BasicBlock *MergeBB = BasicBlock::Create(getGlobalContext(), "ifcont");
+
+    Builder.CreateCondBr(CondV, ThenBB, ElseBB);
+
+    // Emit then value.
+    Builder.SetInsertPoint(ThenBB);
+    pushBlock(ThenBB);
+    Value *ThenV = ifblock->Codegen();
+    popBlock();
+    if (ThenV == 0)
+      return 0;
+
+    Builder.CreateBr(MergeBB);
+    // Codegen of 'Then' can change the current block, update ThenBB for the PHI.
+    ThenBB = Builder.GetInsertBlock();
+
+    // Emit else block.
+    TheFunction->getBasicBlockList().push_back(ElseBB);
+    Builder.SetInsertPoint(ElseBB);
+
+    pushBlock(ElseBB);
+    Value *ElseV = elseblock->Codegen();
+    popBlock();
+    if (ElseV == 0)
+      return 0;
+
+    Builder.CreateBr(MergeBB);
+    // Codegen of 'Else' can change the current block, update ElseBB for the PHI.
+    ElseBB = Builder.GetInsertBlock();
+
+    // Emit merge block.
+    TheFunction->getBasicBlockList().push_back(MergeBB);
+    Builder.SetInsertPoint(MergeBB);
+    PHINode *PN =
+        Builder.CreatePHI(Type::getDoubleTy(getGlobalContext()), 2, "iftmp");
+
+    PN->addIncoming(ThenV, ThenBB);
+    PN->addIncoming(ElseV, ElseBB);
+    return PN;
   }
 };
 class Print : public Node{
@@ -375,16 +447,6 @@ public:
   virtual Value *Codegen(){
   }
 };
-void pushBlock(BasicBlock *block){
-   blocks.push(new Code_Statement_Block());
-   blocks.top()->ret = NULL;
-   blocks.top()->block = block; 
-}
-void popBlock(){
-  /* Code_Statement_Block *tmp = blocks.top(); */
-  blocks.pop();
-  /* delete tmp; */
-}
 class compare{
 	public:
 		bool operator()(const Id &lhs, const Id &rhs){
