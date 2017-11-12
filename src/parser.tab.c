@@ -1865,11 +1865,20 @@ void yyerror (char const *s)
        printf("THE ERROR IS AT: %d\n", x + 1);
 }
 int main(int argc, char** argv) {
+  vector<Type*> argTypes;
+  FunctionType *ftype = FunctionType::get(Type::getVoidTy(getGlobalContext()), makeArrayRef(argTypes), false);
+  module = new Module("main", getGlobalContext());
+  func_main = Function::Create(ftype, GlobalValue::InternalLinkage, "main", module);
+  block = BasicBlock::Create(getGlobalContext(), "entry", func_main, 0);
+  pushBlock(block);
 	FILE *myfile = fopen(argv[1], "r");
 	yyin = myfile;
 	do {
 		yyparse();
 	} while (!feof(yyin));
-	root->accept(visitor);
+	root->Codegen();
+  ReturnInst::Create(getGlobalContext(), block);
+  popBlock();
+  cout << "Code generation done." << '\n';
 	return 0;
 }

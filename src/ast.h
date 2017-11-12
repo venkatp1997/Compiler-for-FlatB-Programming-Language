@@ -1,20 +1,37 @@
 #ifndef _AST_H
 #define _AST_H
+#include <llvm/Pass.h>
+#include <llvm/ADT/SmallVector.h>
+#include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/CallingConv.h>
+#include <llvm/IR/Function.h>
+#include <llvm/IR/GlobalVariable.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
+#include "llvm/IR/Verifier.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
 #include <bits/stdc++.h>
 
 using namespace std;
+using namespace llvm;
 
 class Node{
 public:
+  virtual Value *Codegen() = 0;
 };
 class Program;
 class Decl_Statement;
 class Code_Statement_Block;
 class Code_Statement;
 class Assignment;
-class Id;
 class Term;
+class NumTerm;
+class VarTerm;
 class Expr;
+class Id;
 class BinExpr;
 class BoolExpr;
 class Forloop;
@@ -33,6 +50,8 @@ public:
 	virtual void accept(Id* _node)= 0;
 	virtual int accept(Expr* _node)= 0;
 	virtual int accept(Term* _node)= 0;
+	virtual int accept(NumTerm* _node)= 0;
+	virtual int accept(VarTerm* _node)= 0;
 	virtual int accept(BinExpr* _node)= 0;
 	virtual int accept(BoolExpr* _node)= 0;
 	virtual void accept(Forloop* _node)= 0;
@@ -44,7 +63,13 @@ public:
 	virtual void accept(GoTo* _node)= 0;
 	virtual Id eval(Id* _node)= 0;
 };
-
+static Module *TheModule;
+static IRBuilder<> Builder(getGlobalContext());
+static map<std::string, Value*> NamedValues;
+Function *func_main;
+BasicBlock *block;
+Module *module;
+stack<Code_Statement_Block*> blocks;
 class Program : public Node{
 public:
 	Decl_Statement *dstatement;
@@ -55,6 +80,7 @@ public:
 	void accept(Vstr* _v){
 		_v->accept(this);
 	}
+  virtual Value *Codegen();
 };
 Program* root;
 class Decl_Statement : public Node{
@@ -66,10 +92,13 @@ public:
 	void accept(Vstr* _v){
 		_v->accept(this);
 	}
+  virtual Value *Codegen();
 };
 class Code_Statement_Block : public Node{
 public:
 	vector<Code_Statement*> *statements;
+  BasicBlock *block;
+  Value *ret;
 	Code_Statement_Block(){
 		this->statements = new vector<Code_Statement*>;
 	}
@@ -82,6 +111,7 @@ public:
 	void accept(Vstr* _v){
 		_v->accept(this);
 	}
+  virtual Value *Codegen();
 };
 class Code_Statement : public Node{
 public:
@@ -89,17 +119,22 @@ public:
 
 	}
 	virtual void accept(Vstr* _v) =0;
+  virtual Value *Codegen() = 0;
 };
-class Assignment : public Code_Statement{
+Value* Program::Codegen(){
+  this->dstatement->Codegen(), this->cstatement->Codegen();
+}
+Value* Code_Statement_Block::Codegen(){
+  for(auto u : *(this->statements))
+    u->Codegen();
+}
+class Expr : public Node{
 public:
-	Id *id;
-	Expr *exp;
-	Assignment(Id *_id, Expr *_exp){
-		id = _id, exp = _exp; 
+	virtual ~Expr(){
 	}
-	void accept(Vstr* _v){
-		_v->accept(this);
-	}
+	virtual int accept(Vstr* _v) =0;
+  virtual Value *Codegen(){
+  }
 };
 class Id : public Node{
 public:
@@ -111,26 +146,83 @@ public:
 	void accept(Vstr* _v){
 		_v->accept(this);
 	}
+  virtual Value* Codegen();
 };
-class Expr : public Node{
+Value* Decl_Statement::Codegen(){
+  for(auto u : *(this->ids))
+    u->Codegen();
+}
+class Assignment : public Code_Statement{
 public:
-	virtual ~Expr(){
+	Id *id;
+	Expr *exp;
+	Assignment(Id *_id, Expr *_exp){
+		id = _id, exp = _exp; 
 	}
-	virtual int accept(Vstr* _v) =0;
+	void accept(Vstr* _v){
+		_v->accept(this);
+	}
+  virtual Value *Codegen(){
+    cout << "Assignment for " << id->name << '\n';
+    return new StoreInst(exp->Codegen(), NamedValues[id->name], false, block);
+  }
+};
+Value* Id::Codegen(){
+  cout << "Declaration for " << name << '\n';
+  AllocaInst *alloc = new AllocaInst(IntegerType::get(getGlobalContext(), 32), name.c_str(), block);
+  NamedValues[name] = alloc;
+  if(exp != NULL){
+    Assignment* assn = new Assignment(new Id(name), exp);
+    assn->Codegen();
+  }
+  return alloc;
+}
+class NumTerm : public Expr{
+  public:
+    int val;
+    NumTerm(int _val){
+      val = _val;
+    }
+    int accept(Vstr* _v){
+      return _v->accept(this);
+    }
+    virtual Value *Codegen(){
+      return ConstantInt::get(Type::getInt64Ty(getGlobalContext()), val, true);
+    }
+};
+class VarTerm : public Expr{
+  public:
+    Id* id;
+    VarTerm(Id* _id){
+      id = _id;
+    }
+    int accept(Vstr* _v){
+      return _v->accept(this);
+    }
+    virtual Value *Codegen(){
+      Value *V = NamedValues[id->name];
+      return V;
+    }
 };
 class Term : public Expr{
 public:
-	int val;
-	Id* id;
+  NumTerm* num;
+  VarTerm* var;
 	Term(int _val){
-		val = _val, id = NULL;
+		num = new NumTerm(_val), var = NULL;
 	}
 	Term(Id* _id){
-		id = _id;
+		var = new VarTerm(_id), num = NULL;
 	}
 	int accept(Vstr* _v){
 		return _v->accept(this);
 	}
+  virtual Value *Codegen(){
+    if(this->var == NULL)
+      num->Codegen();
+    else
+      var->Codegen();
+  }
 };
 class BinExpr : public Expr{
 public:
@@ -142,6 +234,16 @@ public:
 	int accept(Vstr* _v){
 		return _v->accept(this);
 	}
+  virtual Value *Codegen(){
+    Value *L = l->Codegen();
+    Value *R = r->Codegen();
+    switch(operand){
+      case '+': return Builder.CreateFAdd(L, R, "addtmp");
+      case '-': return Builder.CreateFSub(L, R, "subtmp");
+      case '*': return Builder.CreateFMul(L, R, "multmp");
+      case '/': return Builder.CreateFDiv(L, R, "divtmp");
+    }
+  }
 };
 class BoolExpr : public Expr{
 public:
@@ -153,6 +255,17 @@ public:
 	int accept(Vstr* _v){
 		return _v->accept(this);
 	}
+  virtual Value *Codegen(){
+    Value *L = l->Codegen();
+    Value *R = r->Codegen();
+    //Check if we need to change to double.
+    if(operand == "<")return Builder.CreateFCmpULT(L, R, "cmpltmp");
+    if(operand == "<=")return Builder.CreateFCmpULE(L, R, "cmpletmp");
+    if(operand == ">")return Builder.CreateFCmpUGT(L, R, "cmpgtmp");
+    if(operand == ">=")return Builder.CreateFCmpUGE(L, R, "cmpgetmp");
+    if(operand == "==")return Builder.CreateFCmpUEQ(L, R, "cmpeqtmp");
+    if(operand == "!=")return Builder.CreateFCmpUNE(L, R, "cmpnetmp");
+  }
 };
 class Forloop : public Code_Statement{
 public:
@@ -165,6 +278,8 @@ public:
 	void accept(Vstr* _v){
 		_v->accept(this);
 	}
+  virtual Value *Codegen(){
+  }
 };
 class Whileloop : public Code_Statement{
 public:
@@ -176,6 +291,8 @@ public:
 	void accept(Vstr* _v){
 		_v->accept(this);
 	}
+  virtual Value *Codegen(){
+  }
 };
 class IfElse : public Code_Statement{
 public:
@@ -191,6 +308,8 @@ public:
 	void accept(Vstr* _v){
 		_v->accept(this);
 	}
+  virtual Value *Codegen(){
+  }
 };
 class Print : public Node{
 public:
@@ -205,6 +324,8 @@ public:
 	void accept(Vstr* _v){
 		_v->accept(this);
 	}
+  virtual Value *Codegen(){
+  }
 };
 class Prints : public Code_Statement{
 public:
@@ -219,6 +340,8 @@ public:
 	void accept(Vstr* _v){
 		_v->accept(this);
 	}
+  virtual Value *Codegen(){
+  }
 };
 
 class Read : public Code_Statement{
@@ -230,6 +353,8 @@ public:
 	void accept(Vstr* _v){
 		_v->accept(this);
 	}
+  virtual Value *Codegen(){
+  }
 };
 class GoTo : public Code_Statement{
 public:
@@ -244,7 +369,19 @@ public:
 	void accept(Vstr* _v){
 		_v->accept(this);
 	}
+  virtual Value *Codegen(){
+  }
 };
+void pushBlock(BasicBlock *block){
+   blocks.push(new Code_Statement_Block());
+   blocks.top()->ret = NULL;
+   blocks.top()->block = block; 
+}
+void popBlock(){
+  Code_Statement_Block *top = blocks.top();
+  blocks.pop();
+  delete top;
+}
 class compare{
 	public:
 		bool operator()(const Id &lhs, const Id &rhs){
@@ -269,12 +406,10 @@ public:
 			u->accept(this);
 	}
 	void accept(Code_Statement_Block* _node){
-		// cout << "CBLOCK" << '\n';
 		for(auto u : *(_node->statements))
 			u->accept(this);
 	}
 	void accept(Id* _node){
-		// cout << "ID" << '\n';
 		if(_node->exp != NULL){
 			int number = _node->exp->accept(this);
 			for(int i = 0; i < number; i++)
@@ -284,64 +419,48 @@ public:
 			table[*_node] = 0;
 	}
 	int accept(Term* _node){
-		// cout << "TERM" << '\n';
-		return ((_node->id == NULL) ? _node->val : table[eval(_node->id)]);
+		return ((_node->var == NULL) ? _node->num->accept(this) : _node->var->accept(this));
 	}
-	// void accept(Code_Statement* _node){
-	// 	if((dynamic_cast<GoTo*>(_node)))
-	// 		accept((dynamic_cast<GoTo*>(_node)));
-	// 	((dynamic_cast<Assignment*>(_node)) ? (dynamic_cast<Assignment *>(_node))->accept(this) : 
-	// 	((dynamic_cast<Forloop*>(_node)) ? (dynamic_cast<Forloop*>(_node))->accept(this) :
-	// 	((dynamic_cast<Whileloop*>(_node)) ? (dynamic_cast<Whileloop*>(_node))->accept(this) :
-	// 	((dynamic_cast<IfElse*>(_node)) ? (dynamic_cast<IfElse*>(_node))->accept(this) :
-	// 	((dynamic_cast<Prints*>(_node)) ? (dynamic_cast<Prints*>(_node))->accept(this) :
-	// 	((dynamic_cast<GoTo*>(_node)) ? (dynamic_cast<GoTo*>(_node))->accept(this) :
-	// 	(dynamic_cast<Read*>(_node))->accept(this)))))));
-	// }
+	int accept(NumTerm* _node){
+		return _node->val;
+	}
+	int accept(VarTerm* _node){
+		return table[eval(_node->id)];
+	}
 	void accept(Assignment* _node){
-		// cout << "Assignment" << '\n';
 		table[eval(_node->id)] = _node->exp->accept(this);
 	}
 	void accept(Read* _node){
-		// cout << "Read" << '\n';
 		for(auto u : *(_node->ids))
 			cin >> table[eval(u)];
 	}
 	void accept(Whileloop* _node){
-		// cout << "WHILE" << '\n';
 		for(;_node->boolexp->accept(this);)
 			_node->block->accept(this);
 	}
 	void accept(IfElse* _node){
-		// cout << "IF" << '\n';
 		if(_node->boolexp->accept(this))
 			_node->ifblock->accept(this);
 		else if(_node->elseblock != NULL)
 			_node->elseblock->accept(this);
 	}
 	void accept(Forloop* _node){
-		// cout << "FOR" << '\n';
 		Id i = eval(_node->id);
 		for(table[i] = _node->init; table[i] < _node->end; table[i] += _node->incr)
 			_node->block->accept(this);
 	}
 	void accept(Print* _node){
-		// cout << "PRINT" << '\n';
 		if(!_node->exp)
 			cout << _node->str;
 		else
 			cout << _node->exp->accept(this);
 	}
 	void accept(Prints* _node){
-		// cout << "PRINTS" << '\n';
 		for(auto u : *(_node->print))
 			u->accept(this);
 		cout << _node->end;
 	}
 	void accept(GoTo* _node){
-		// if(label_table.find(_node->id) == label_table.end() || table.find(*(new Id(_node->id))) != table.end())
-		// if(label_table.find(_node->id) == label_table.end() || table.find(*(new Id(_node->id))) != table.end())
-		// 	exit(-1);
 		if(_node->exp == NULL || _node->exp->accept(this)){
 			for(auto u : label_table[_node->id])
 				u->accept(this);
@@ -349,14 +468,11 @@ public:
 		}
 	}
 	int accept(Expr* _node){
-		// cout << "EXPR" << '\n';
 		return ((dynamic_cast<BinExpr*>(_node)) ? (dynamic_cast<BinExpr*>(_node))->accept(this) :
 		(((dynamic_cast<BoolExpr*>(_node)) ? (dynamic_cast<BoolExpr*>(_node))->accept(this) :
 		(dynamic_cast<Term*>(_node))->accept(this))));
 	}
 	int accept(BinExpr* _node){
-		// cout << "BINEXPR" << '\n';
-		// cout << _node->l->accept(this) << " " << _node->r->accept(this) << '\n';
 		if(_node->operand == '+')
 			return _node->l->accept(this) + _node->r->accept(this);
 		if(_node->operand == '-')
@@ -367,7 +483,6 @@ public:
 			return _node->l->accept(this) / _node->r->accept(this);
 	}
 	int accept(BoolExpr* _node){
-		// cout << "BoolExpr" << _node->l->accept(this) << " " << _node->r->accept(this) << '\n';
 		if(_node->operand == ">")
 			return _node->l->accept(this) > _node->r->accept(this);
 		if(_node->operand == ">=")
