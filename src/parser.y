@@ -166,5 +166,8 @@ int main(int argc, char** argv) {
   ReturnInst::Create(getGlobalContext(), block);
   popBlock();
   cout << "Code generation done." << '\n';
+  legacy::PassManager pm;
+  pm.add(createPrintModulePass(outs()));
+  pm.run(*module);
 	return 0;
 }
