@@ -4,7 +4,8 @@ declblock{
 
 codeblock{
   a = 2;
-  if a <= 1 {
+  b = 3;
+  if a > b {
     b = 13;
   }
   else {

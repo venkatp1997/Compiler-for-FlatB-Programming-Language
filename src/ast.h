@@ -66,13 +66,14 @@ public:
 	virtual void accept(GoTo* _node)= 0;
 	virtual Id eval(Id* _node)= 0;
 };
-static Module *TheModule;
-static IRBuilder<> Builder(getGlobalContext());
-static map<std::string, Value*> NamedValues;
-Function *func_main;
-BasicBlock *block_main;
-Module *module;
+vector<Type*> argTypes;
+FunctionType *ftype = FunctionType::get(Type::getVoidTy(getGlobalContext()), makeArrayRef(argTypes), false);
+Module *module = new Module("main", getGlobalContext());
+Function *func_main = Function::Create(ftype, GlobalValue::InternalLinkage, "main", module);
+BasicBlock *block_main = BasicBlock::Create(getGlobalContext(), "entry", func_main, 0);
 stack<Code_Statement_Block*> blocks;
+IRBuilder<> Builder(block_main);
+map<std::string, Value*> NamedValues;
 class Program : public Node{
 public:
 	Decl_Statement *dstatement;
@@ -125,12 +126,13 @@ public:
   virtual Value *Codegen() = 0;
 };
 Value* Program::Codegen(){
-  Value* last = this->dstatement->Codegen();
+  Value* last = NULL;
+  last = this->dstatement->Codegen();
   last = this->cstatement->Codegen();
   return last;
 }
 Value* Code_Statement_Block::Codegen(){
-  Value* last;
+  Value* last = NULL;
   for(auto u : *(this->statements))
     last = u->Codegen();
   return last;
@@ -165,7 +167,7 @@ public:
   virtual Value* Codegen();
 };
 Value* Decl_Statement::Codegen(){
-  Value* last;
+  Value* last = NULL;
   for(auto u : *(this->ids))
     last = u->Codegen();
   return last;
@@ -191,6 +193,7 @@ Value* Id::Codegen(){
   NamedValues[name] = alloc;
   if(exp != NULL){
     Assignment* assn = new Assignment(new Id(name), exp);
+    cout << name << '\n';
     assn->Codegen();
   }
   return alloc;
@@ -205,7 +208,7 @@ class NumTerm : public Expr{
       return _v->accept(this);
     }
     virtual Value *Codegen(){
-      return ConstantInt::get(Type::getInt64Ty(getGlobalContext()), val, true);
+      return ConstantInt::get(Type::getInt32Ty(getGlobalContext()), val, true);
     }
 };
 class VarTerm : public Expr{
@@ -218,8 +221,9 @@ class VarTerm : public Expr{
       return _v->accept(this);
     }
     virtual Value *Codegen(){
-      if(NamedValues.find(id->name) == NamedValues.end())
-        NamedValues[id->name] = ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 0, true);
+      /* if(NamedValues.find(id->name) == NamedValues.end()) */
+      /*   NamedValues[id->name] = ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 0, true); */
+      /* cout << (valA == NULL) << '\n'; */
       return NamedValues[id->name];
     }
 };
@@ -278,7 +282,6 @@ public:
     Value *L = l->Codegen();
     Value *R = r->Codegen();
     if(L == 0 || R == 0)return 0;
-    //Check if we need to change to double.
     if(operand == "<")L = Builder.CreateFCmpULT(L, R, "cmpltmp");
     if(operand == "<=")L = Builder.CreateFCmpULE(L, R, "cmpletmp");
     if(operand == ">")L = Builder.CreateFCmpUGT(L, R, "cmpgtmp");
@@ -346,9 +349,8 @@ public:
         BasicBlock::Create(getGlobalContext(), "then", TheFunction);
     BasicBlock *ElseBB = BasicBlock::Create(getGlobalContext(), "else");
     BasicBlock *MergeBB = BasicBlock::Create(getGlobalContext(), "ifcont");
-
     Builder.CreateCondBr(CondV, ThenBB, ElseBB);
-
+    /* cout << "CreateCondBr " << ret << '\n'; */
     // Emit then value.
     Builder.SetInsertPoint(ThenBB);
     pushBlock(ThenBB);
@@ -358,6 +360,7 @@ public:
       return 0;
 
     Builder.CreateBr(MergeBB);
+    /* cout << "CreateBr1" << ret << '\n'; */
     // Codegen of 'Then' can change the current block, update ThenBB for the PHI.
     ThenBB = Builder.GetInsertBlock();
 
@@ -372,18 +375,19 @@ public:
       return 0;
 
     Builder.CreateBr(MergeBB);
+    /* cout << "CreateBr2" << ret << '\n'; */
     // Codegen of 'Else' can change the current block, update ElseBB for the PHI.
     ElseBB = Builder.GetInsertBlock();
 
     // Emit merge block.
+    pushBlock(MergeBB);
     TheFunction->getBasicBlockList().push_back(MergeBB);
     Builder.SetInsertPoint(MergeBB);
-    PHINode *PN =
-        Builder.CreatePHI(Type::getDoubleTy(getGlobalContext()), 2, "iftmp");
-
-    PN->addIncoming(ThenV, ThenBB);
-    PN->addIncoming(ElseV, ElseBB);
-    return PN;
+    /* PHINode *PN = */
+    /*     Builder.CreatePHI(Type::getDoubleTy(getGlobalContext()), 2, "iftmp"); */
+    /* PN->addIncoming(ThenV, ThenBB); */
+    /* PN->addIncoming(ElseV, ElseBB); */
+    return NULL;
   }
 };
 class Print : public Node{
