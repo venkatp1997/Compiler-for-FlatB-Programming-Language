@@ -1,5 +1,5 @@
 declblock{
-	int a, b, c;
+	int a, b, c, d, e;
 }
 
 codeblock{
@@ -12,5 +12,11 @@ codeblock{
     b = 3;
   }
   c = a + b;
+  if c > a{
+    d = 2;
+  }
+  else{
+    e = 5;
+  }
 }
 

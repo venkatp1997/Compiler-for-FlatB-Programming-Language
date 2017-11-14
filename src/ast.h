@@ -272,15 +272,29 @@ class BoolExpr : public Expr{
 public:
 	Expr *l, *r;
 	string operand;
+  Value* L1;
+  Value* R1;
 	BoolExpr(Expr *_l, Expr *_r, string _operand){
 		l = _l, r = _r, operand = _operand;
+    L1 = NULL, R1 = NULL;
 	}
+	BoolExpr(Value *_l, Value *_r, string _operand){
+    l = NULL;
+    r = NULL;
+    L1 = _l, R1 = _r;
+  }
 	int accept(Vstr* _v){
 		return _v->accept(this);
 	}
   virtual Value *Codegen(){
-    Value *L = l->Codegen();
-    Value *R = r->Codegen();
+    Value *L;
+    Value *R;
+    if(L1 == NULL && R1 == NULL){
+      Value *L = l->Codegen();
+      Value *R = r->Codegen();
+    }
+    else
+      L = L1, R = R1;
     if(L == 0 || R == 0)return 0;
     if(operand == "<")L = Builder.CreateFCmpULT(L, R, "cmpltmp");
     if(operand == "<=")L = Builder.CreateFCmpULE(L, R, "cmpletmp");
@@ -295,14 +309,100 @@ class Forloop : public Code_Statement{
 public:
 	Id* id;
 	Code_Statement_Block* block;
-	int init, incr, end;
-	Forloop(Id* _id, int _init, int _end, Code_Statement_Block* _block, int _incr = 1){
-		id = _id, init = init, incr = _incr, end = _end, block = _block;
+  int init, incr, last;
+  BoolExpr* end;
+	Forloop(Id* _id, int _init, int _last, Code_Statement_Block* _block, int _incr = 1){
+		id = _id, init = _init, incr = _incr, last = _last, block = _block;
 	}
 	void accept(Vstr* _v){
 		_v->accept(this);
 	}
-  virtual Value *Codegen(){
+  virtual Value* Codegen() {
+    // Emit the start code first, without 'variable' in scope.
+    Assignment* assn = new Assignment(id, new NumTerm(init));
+    assn->Codegen();
+    /* if (!StartVal) */
+    /*   return nullptr; */
+
+    /* // Make the new basic block for the loop header, inserting after current */
+    /* // block. */
+    Function *TheFunction = func_main;
+    BasicBlock *PreheaderBB = Builder.GetInsertBlock();
+    BasicBlock *LoopBB = BasicBlock::Create(getGlobalContext(), "loop", TheFunction);
+
+    /* // Insert an explicit fall through from the current block to the LoopBB. */
+    Builder.CreateBr(LoopBB);
+
+    /* // Start insertion in LoopBB. */
+    Builder.SetInsertPoint(LoopBB);
+    pushBlock(LoopBB);
+
+    /* // Start the PHI node with an entry for Start. */
+    /* PHINode *Variable = */
+    /*   Builder.CreatePHI(Type::getDoubleTy(TheContext), 2, VarName); */
+    /* Variable->addIncoming(StartVal, PreheaderBB); */
+
+    /* // Within the loop, the variable is defined equal to the PHI node.  If it */
+    /* // shadows an existing variable, we have to restore it, so save it now. */
+    /* Value *OldVal = NamedValues[id->name]; */
+    /* NamedValues[id->name] = ; */
+
+    /* // Emit the body of the loop.  This, like any other expr, can change the */
+    /* // current BB.  Note that we ignore the value computed by the body, but don't */
+    /* // allow an error. */
+    block->Codegen();
+    /* if (!Body->codegen()) */
+    /*   return nullptr; */
+
+    /* // Emit the step value. */
+    /* Value *StepVal = nullptr; */
+    /* if (Step) { */
+    /*   StepVal = Step->codegen(); */
+    /*   if (!StepVal) */
+    /*     return nullptr; */
+    /* } else { */
+    /*   // If not specified, use 1.0. */
+    /*   StepVal = ConstantFP::get(TheContext, APFloat(1.0)); */
+    /* } */
+    Value *StepVal = (new NumTerm(incr))->Codegen();
+	  Value *NextVar = BinaryOperator::Create(Instruction::Add, NamedValues[id->name], StepVal, "nextvar", blocks.top()->block);
+    NamedValues[id->name] = NextVar;
+    Value* EndVal = (new NumTerm(last))->Codegen();
+    /* // Compute the end condition. */
+    BoolExpr* endExpr = new BoolExpr(NamedValues[id->name], EndVal, "<");
+    Value *EndCond = endExpr->Codegen();
+    /* if (!EndCond) */
+    /*   return nullptr; */
+
+    /* // Convert condition to a bool by comparing non-equal to 0.0. */
+		FCmpInst *comparison = new FCmpInst(*blocks.top()->block, FCmpInst::FCMP_UNE, EndCond, ConstantFP::get(getGlobalContext(), APFloat(0.0)), "cmp");
+    popBlock();
+    /* EndCond = Builder.CreateFCmpONE( */
+    /*     EndCond, ConstantFP::get(getGlobalContext(), APFloat(0.0)), "loopcond"); */
+
+    /* // Create the "after loop" block and insert it. */
+    BasicBlock *LoopEndBB = Builder.GetInsertBlock();
+    BasicBlock *AfterBB =
+      BasicBlock::Create(getGlobalContext(), "afterloop", TheFunction);
+
+    /* // Insert the conditional branch into the end of LoopEndBB. */
+    Builder.CreateCondBr(comparison, LoopBB, AfterBB);
+
+    /* // Any new code will be inserted in AfterBB. */
+    Builder.SetInsertPoint(AfterBB);
+    pushBlock(AfterBB);
+
+    /* // Add a new entry to the PHI node for the backedge. */
+    /* Variable->addIncoming(NextVar, LoopEndBB); */
+
+    /* // Restore the unshadowed variable. */
+    /* if (OldVal) */
+    /*   NamedValues[VarName] = OldVal; */
+    /* else */
+    /*   NamedValues.erase(VarName); */
+
+    /* // for expr always returns 0.0. */
+    return Constant::getNullValue(Type::getDoubleTy(getGlobalContext()));
   }
 };
 class Whileloop : public Code_Statement{
@@ -387,7 +487,7 @@ public:
     /*     Builder.CreatePHI(Type::getDoubleTy(getGlobalContext()), 2, "iftmp"); */
     /* PN->addIncoming(ThenV, ThenBB); */
     /* PN->addIncoming(ElseV, ElseBB); */
-    return NULL;
+    return Constant::getNullValue(Type::getDoubleTy(getGlobalContext()));
   }
 };
 class Print : public Node{
@@ -514,9 +614,10 @@ public:
 			_node->elseblock->accept(this);
 	}
 	void accept(Forloop* _node){
-		Id i = eval(_node->id);
-		for(table[i] = _node->init; table[i] < _node->end; table[i] += _node->incr)
-			_node->block->accept(this);
+    return;
+		/* Id i = eval(_node->id); */
+		/* for(table[i] = _node->init; table[i] < _node->end; table[i] += _node->incr) */
+		/* 	_node->block->accept(this); */
 	}
 	void accept(Print* _node){
 		if(!_node->exp)

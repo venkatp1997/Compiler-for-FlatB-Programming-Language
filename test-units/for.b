@@ -1,13 +1,12 @@
 declblock{
-	int a;
+	int a, b, c;
 }
 
 codeblock{
+  a = 1;
   for a = 1, 10, 3 {
-    println "First for";
+    b = a;
   }
-  for a = 1, 10, 1 {
-    println "Second for";
-  }
+  c = b;
 }
 
